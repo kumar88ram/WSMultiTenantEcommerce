@@ -1,13 +1,13 @@
 namespace MultiTenantEcommerce.Domain.Entities;
 
-public class Tenant
+public class CronJob
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty;
-    public string Subdomain { get; set; } = string.Empty;
-    public string? CustomDomain { get; set; }
-    public string DbConnectionString { get; set; } = string.Empty;
-    public Guid PlanId { get; set; }
+    public string ScheduleExpression { get; set; } = string.Empty;
+    public string Handler { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
+    public DateTime? LastRunAt { get; set; }
+    public DateTime? NextRunAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -35,12 +35,20 @@ internal sealed partial class TenantProvisioningService : ITenantProvisioningSer
 
         await EnsureUniqueTenantAsync(request, cancellationToken);
 
+        var planExists = await _adminDbContext.SubscriptionPlans
+            .AnyAsync(p => p.Id == request.PlanId, cancellationToken);
+
+        if (!planExists)
+        {
+            throw new ArgumentException("Subscription plan does not exist.", nameof(request));
+        }
+
         var tenant = new Tenant
         {
             Name = request.Name.Trim(),
             Subdomain = request.Subdomain.Trim().ToLowerInvariant(),
             CustomDomain = string.IsNullOrWhiteSpace(request.CustomDomain) ? null : request.CustomDomain.Trim().ToLowerInvariant(),
-            PlanId = request.PlanId.Trim(),
+            PlanId = request.PlanId,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -138,7 +146,7 @@ internal sealed partial class TenantProvisioningService : ITenantProvisioningSer
             throw new ArgumentException("Custom domain is invalid.", nameof(request));
         }
 
-        if (string.IsNullOrWhiteSpace(request.PlanId))
+        if (request.PlanId == Guid.Empty)
         {
             throw new ArgumentException("Plan identifier is required.", nameof(request));
         }

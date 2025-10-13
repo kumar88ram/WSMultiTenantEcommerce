@@ -4,5 +4,5 @@ public record CreateTenantRequest(
     string Name,
     string Subdomain,
     string? CustomDomain,
-    string PlanId
+    Guid PlanId
 );
