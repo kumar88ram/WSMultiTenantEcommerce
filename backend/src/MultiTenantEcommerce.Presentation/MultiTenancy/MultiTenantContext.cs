@@ -6,4 +6,5 @@ public class MultiTenantContext : ITenantResolver
 {
     public Guid CurrentTenantId { get; set; }
     public string? TenantIdentifier { get; set; }
+    public string? ConnectionString { get; set; }
 }
