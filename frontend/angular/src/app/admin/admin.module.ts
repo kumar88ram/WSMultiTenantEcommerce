@@ -1,20 +1,9 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-
-const routes: Routes = [
-  {
-    path: '',
-    loadComponent: () => import('./pages/dashboard.component').then(m => m.DashboardComponent)
-  },
-  {
-    path: 'tenants/create',
-    loadComponent: () =>
-      import('./pages/tenant-create/tenant-create.component').then(m => m.TenantCreateComponent)
-  }
-];
+import { RouterModule } from '@angular/router';
+import { ADMIN_ROUTES } from './admin.routes';
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
+  imports: [RouterModule.forChild(ADMIN_ROUTES)],
   exports: [RouterModule]
 })
 export class AdminModule {}
