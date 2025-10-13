@@ -8,7 +8,10 @@ public class ProductConfiguration :
     IEntityTypeConfiguration<Product>,
     IEntityTypeConfiguration<ProductCategory>,
     IEntityTypeConfiguration<ProductAttribute>,
+    IEntityTypeConfiguration<AttributeValue>,
     IEntityTypeConfiguration<ProductVariant>,
+    IEntityTypeConfiguration<ProductVariantAttributeValue>,
+    IEntityTypeConfiguration<Inventory>,
     IEntityTypeConfiguration<ProductImage>
 {
     public void Configure(EntityTypeBuilder<Product> builder)
@@ -46,6 +49,11 @@ public class ProductConfiguration :
             .WithOne(v => v.Product)
             .HasForeignKey(v => v.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(p => p.Inventory)
+            .WithOne(i => i.Product)
+            .HasForeignKey(i => i.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     public void Configure(EntityTypeBuilder<ProductCategory> builder)
@@ -73,9 +81,31 @@ public class ProductConfiguration :
             .HasMaxLength(150)
             .IsRequired();
 
-        builder.Property(pa => pa.Value)
+        builder.Property(pa => pa.DisplayName)
+            .HasMaxLength(150)
+            .IsRequired();
+
+        builder.HasIndex(pa => new { pa.TenantId, pa.ProductId, pa.Name }).IsUnique();
+
+        builder.HasMany(pa => pa.Values)
+            .WithOne(v => v.ProductAttribute)
+            .HasForeignKey(v => v.ProductAttributeId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+
+    public void Configure(EntityTypeBuilder<AttributeValue> builder)
+    {
+        builder.ToTable("AttributeValues");
+        builder.HasKey(av => av.Id);
+
+        builder.Property(av => av.Value)
             .HasMaxLength(400)
             .IsRequired();
+
+        builder.Property(av => av.SortOrder)
+            .HasDefaultValue(0);
+
+        builder.HasIndex(av => new { av.TenantId, av.ProductAttributeId, av.Value }).IsUnique();
     }
 
     public void Configure(EntityTypeBuilder<ProductVariant> builder)
@@ -88,10 +118,53 @@ public class ProductConfiguration :
             .IsRequired();
 
         builder.Property(pv => pv.Sku)
-            .HasMaxLength(100);
+            .HasMaxLength(100)
+            .IsRequired();
 
         builder.Property(pv => pv.Price)
             .HasPrecision(18, 2);
+
+        builder.Property(pv => pv.CompareAtPrice)
+            .HasPrecision(18, 2);
+
+        builder.HasIndex(pv => new { pv.TenantId, pv.Sku }).IsUnique();
+
+        builder.HasMany(pv => pv.AttributeValues)
+            .WithOne(v => v.ProductVariant)
+            .HasForeignKey(v => v.ProductVariantId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(pv => pv.Inventory)
+            .WithOne(i => i.ProductVariant)
+            .HasForeignKey<Inventory>(i => i.ProductVariantId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+
+    public void Configure(EntityTypeBuilder<ProductVariantAttributeValue> builder)
+    {
+        builder.ToTable("ProductVariantAttributeValues");
+        builder.HasKey(pvav => pvav.Id);
+
+        builder.HasIndex(pvav => new { pvav.TenantId, pvav.ProductVariantId, pvav.AttributeValueId }).IsUnique();
+
+        builder.HasOne(pvav => pvav.AttributeValue)
+            .WithMany(av => av.VariantValues)
+            .HasForeignKey(pvav => pvav.AttributeValueId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+
+    public void Configure(EntityTypeBuilder<Inventory> builder)
+    {
+        builder.ToTable("Inventories");
+        builder.HasKey(i => i.Id);
+
+        builder.Property(i => i.QuantityOnHand)
+            .HasDefaultValue(0);
+
+        builder.Property(i => i.ReservedQuantity)
+            .HasDefaultValue(0);
+
+        builder.HasIndex(i => new { i.TenantId, i.ProductId, i.ProductVariantId }).IsUnique();
     }
 
     public void Configure(EntityTypeBuilder<ProductImage> builder)

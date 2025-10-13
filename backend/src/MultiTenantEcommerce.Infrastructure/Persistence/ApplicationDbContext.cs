@@ -29,8 +29,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductCategory> ProductCategories => Set<ProductCategory>();
     public DbSet<ProductAttribute> ProductAttributes => Set<ProductAttribute>();
+    public DbSet<AttributeValue> AttributeValues => Set<AttributeValue>();
     public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
+    public DbSet<ProductVariantAttributeValue> ProductVariantAttributeValues => Set<ProductVariantAttributeValue>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+    public DbSet<Inventory> Inventories => Set<Inventory>();
     public DbSet<MenuDefinition> MenuDefinitions => Set<MenuDefinition>();
     public DbSet<FormDefinition> FormDefinitions => Set<FormDefinition>();
     public DbSet<FormField> FormFields => Set<FormField>();
@@ -59,8 +62,11 @@ public class ApplicationDbContext : DbContext
             modelBuilder.Entity<Category>().HasQueryFilter(c => c.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<Product>().HasQueryFilter(p => p.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<ProductAttribute>().HasQueryFilter(pa => pa.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<AttributeValue>().HasQueryFilter(av => av.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<ProductVariant>().HasQueryFilter(pv => pv.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<ProductVariantAttributeValue>().HasQueryFilter(pvav => pvav.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<ProductImage>().HasQueryFilter(pi => pi.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<Inventory>().HasQueryFilter(i => i.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<MenuDefinition>().HasQueryFilter(m => m.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<FormDefinition>().HasQueryFilter(f => f.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<FormField>().HasQueryFilter(f => f.TenantId == _tenantResolver.CurrentTenantId);
