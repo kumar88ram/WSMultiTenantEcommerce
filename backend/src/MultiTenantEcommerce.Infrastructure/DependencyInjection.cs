@@ -6,6 +6,7 @@ using MultiTenantEcommerce.Application.Abstractions;
 using MultiTenantEcommerce.Application.Services;
 using MultiTenantEcommerce.Infrastructure.MultiTenancy;
 using MultiTenantEcommerce.Infrastructure.Persistence;
+using MultiTenantEcommerce.Infrastructure.Persistence.Repositories;
 using MultiTenantEcommerce.Infrastructure.Security;
 
 namespace MultiTenantEcommerce.Infrastructure;
@@ -58,6 +59,8 @@ public static class DependencyInjection
         services.AddScoped<IPluginManagementService, PluginManagementService>();
         services.AddScoped<ICronJobService, CronJobService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IProductCatalogService, ProductCatalogService>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenFactory, JwtTokenFactory>();
