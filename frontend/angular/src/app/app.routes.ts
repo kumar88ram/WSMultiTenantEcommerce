@@ -9,7 +9,7 @@ export const appRoutes: Routes = [
   {
     path: 'admin',
     canActivate: [provideAuthGuard()],
-    loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES)
+    loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule)
   },
   {
     path: '',
