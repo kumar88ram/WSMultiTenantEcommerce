@@ -23,6 +23,18 @@ public class ApplicationDbContext : DbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<StoreSetting> StoreSettings => Set<StoreSetting>();
+    public DbSet<Theme> Themes => Set<Theme>();
+    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<ProductCategory> ProductCategories => Set<ProductCategory>();
+    public DbSet<ProductAttribute> ProductAttributes => Set<ProductAttribute>();
+    public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
+    public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+    public DbSet<MenuDefinition> MenuDefinitions => Set<MenuDefinition>();
+    public DbSet<FormDefinition> FormDefinitions => Set<FormDefinition>();
+    public DbSet<FormField> FormFields => Set<FormField>();
+    public DbSet<WidgetDefinition> WidgetDefinitions => Set<WidgetDefinition>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,6 +54,18 @@ public class ApplicationDbContext : DbContext
             modelBuilder.Entity<Role>().HasQueryFilter(r => r.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<UserRole>().HasQueryFilter(ur => ur.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<RefreshToken>().HasQueryFilter(rt => rt.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<StoreSetting>().HasQueryFilter(s => s.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<Theme>().HasQueryFilter(t => t.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<Category>().HasQueryFilter(c => c.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<Product>().HasQueryFilter(p => p.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<ProductAttribute>().HasQueryFilter(pa => pa.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<ProductVariant>().HasQueryFilter(pv => pv.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<ProductImage>().HasQueryFilter(pi => pi.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<MenuDefinition>().HasQueryFilter(m => m.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<FormDefinition>().HasQueryFilter(f => f.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<FormField>().HasQueryFilter(f => f.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<WidgetDefinition>().HasQueryFilter(w => w.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<ProductCategory>().HasQueryFilter(pc => pc.TenantId == _tenantResolver.CurrentTenantId);
         }
     }
 }
