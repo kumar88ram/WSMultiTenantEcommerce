@@ -27,12 +27,17 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
             .IsRequired();
 
         builder.Property(t => t.PlanId)
-            .HasMaxLength(64);
+            .IsRequired();
 
         builder.Property(t => t.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
 
         builder.HasIndex(t => t.Subdomain).IsUnique();
         builder.HasIndex(t => t.CustomDomain).IsUnique().HasFilter("[CustomDomain] IS NOT NULL");
+
+        builder.HasOne<SubscriptionPlan>()
+            .WithMany()
+            .HasForeignKey(t => t.PlanId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

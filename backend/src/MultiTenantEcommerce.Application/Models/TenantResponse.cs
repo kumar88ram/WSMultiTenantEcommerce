@@ -7,7 +7,7 @@ public record TenantResponse(
     string Name,
     string Subdomain,
     string? CustomDomain,
-    string PlanId,
+    Guid PlanId,
     bool IsActive,
     DateTime CreatedAt
 )

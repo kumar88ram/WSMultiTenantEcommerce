@@ -52,6 +52,12 @@ public static class DependencyInjection
 
         services.AddScoped<ITenantDbContextFactory, TenantDbContextFactory>();
         services.AddScoped<ITenantProvisioningService, TenantProvisioningService>();
+        services.AddScoped<IAdminTenantService, AdminTenantService>();
+        services.AddScoped<ISubscriptionPlanService, SubscriptionPlanService>();
+        services.AddScoped<ISubscriptionService, SubscriptionService>();
+        services.AddScoped<IPluginManagementService, PluginManagementService>();
+        services.AddScoped<ICronJobService, CronJobService>();
+        services.AddScoped<IAnalyticsService, AnalyticsService>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenFactory, JwtTokenFactory>();
