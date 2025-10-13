@@ -1,15 +1,13 @@
 namespace MultiTenantEcommerce.Domain.Entities;
 
-public class Tenant : BaseEntity
+public class Tenant
 {
-    public string Identifier { get; set; } = string.Empty;
+    public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty;
+    public string Subdomain { get; set; } = string.Empty;
+    public string? CustomDomain { get; set; }
+    public string DbConnectionString { get; set; } = string.Empty;
+    public string PlanId { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
-
-    public ICollection<User> Users { get; set; } = new List<User>();
-
-    public Tenant()
-    {
-        TenantId = Id;
-    }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

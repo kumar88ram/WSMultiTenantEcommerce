@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MultiTenantEcommerce.Application.Abstractions;
 using MultiTenantEcommerce.Application.Services;
+using MultiTenantEcommerce.Infrastructure.MultiTenancy;
 using MultiTenantEcommerce.Infrastructure.Persistence;
 using MultiTenantEcommerce.Infrastructure.Security;
 
@@ -12,8 +14,44 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        services.Configure<MultiTenancyOptions>(configuration.GetSection("MultiTenancy"));
+
+        services.AddDbContext<AdminDbContext>((sp, options) =>
+        {
+            var multiTenancyOptions = sp.GetRequiredService<IOptions<MultiTenancyOptions>>().Value;
+            var connectionString = !string.IsNullOrWhiteSpace(multiTenancyOptions.AdminConnectionString)
+                ? multiTenancyOptions.AdminConnectionString
+                : configuration.GetConnectionString("DefaultConnection")
+                  ?? throw new InvalidOperationException("Admin connection string is not configured.");
+
+            options.UseSqlServer(connectionString, builder =>
+                builder.MigrationsHistoryTable("__AdminMigrationsHistory"));
+        });
+
+        services.AddDbContext<ApplicationDbContext>((sp, options) =>
+        {
+            var multiTenancyOptions = sp.GetRequiredService<IOptions<MultiTenancyOptions>>().Value;
+
+            string connectionString;
+            if (multiTenancyOptions.UseSharedDatabase)
+            {
+                connectionString = !string.IsNullOrWhiteSpace(multiTenancyOptions.SharedDatabaseConnectionString)
+                    ? multiTenancyOptions.SharedDatabaseConnectionString
+                    : configuration.GetConnectionString("DefaultConnection")
+                      ?? throw new InvalidOperationException("Shared database connection string is not configured.");
+            }
+            else
+            {
+                var tenantResolver = sp.GetRequiredService<ITenantResolver>();
+                connectionString = tenantResolver.ConnectionString
+                                 ?? throw new InvalidOperationException("Tenant connection string was not resolved.");
+            }
+
+            options.UseSqlServer(connectionString);
+        });
+
+        services.AddScoped<ITenantDbContextFactory, TenantDbContextFactory>();
+        services.AddScoped<ITenantProvisioningService, TenantProvisioningService>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenFactory, JwtTokenFactory>();

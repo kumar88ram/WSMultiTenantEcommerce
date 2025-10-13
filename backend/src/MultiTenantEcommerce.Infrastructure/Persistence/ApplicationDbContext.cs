@@ -1,18 +1,27 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using MultiTenantEcommerce.Application.Abstractions;
 using MultiTenantEcommerce.Domain.Entities;
 
 namespace MultiTenantEcommerce.Infrastructure.Persistence;
 
 public class ApplicationDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    private readonly ITenantResolver? _tenantResolver;
+    private readonly MultiTenancyOptions _multiTenancyOptions;
+
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        ITenantResolver? tenantResolver,
+        IOptions<MultiTenancyOptions>? multiTenancyOptions) : base(options)
     {
+        _tenantResolver = tenantResolver;
+        _multiTenancyOptions = multiTenancyOptions?.Value ?? new MultiTenancyOptions();
     }
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
-    public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -21,9 +30,18 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
+        modelBuilder.Ignore<Tenant>();
+
         modelBuilder.Entity<UserRole>().HasKey(ur => new { ur.UserId, ur.RoleId, ur.TenantId });
         modelBuilder.Entity<User>().HasIndex(u => new { u.NormalizedUserName, u.TenantId }).IsUnique();
         modelBuilder.Entity<Role>().HasIndex(r => new { r.NormalizedName, r.TenantId }).IsUnique();
-        modelBuilder.Entity<Tenant>().HasIndex(t => t.Identifier).IsUnique();
+
+        if (_multiTenancyOptions.UseSharedDatabase && _tenantResolver is not null)
+        {
+            modelBuilder.Entity<User>().HasQueryFilter(u => u.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<Role>().HasQueryFilter(r => r.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<UserRole>().HasQueryFilter(ur => ur.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<RefreshToken>().HasQueryFilter(rt => rt.TenantId == _tenantResolver.CurrentTenantId);
+        }
     }
 }
