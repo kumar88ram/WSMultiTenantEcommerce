@@ -85,6 +85,7 @@ public static class DependencyInjection
         services.AddSingleton<IPaymentGateway, RazorpayPaymentGateway>();
         services.AddScoped<IPaymentGatewayOrchestrator, PaymentGatewayOrchestrator>();
         services.AddHostedService<EmailNotificationWorker>();
+        services.AddHostedService<DailyAnalyticsAggregationWorker>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenFactory, JwtTokenFactory>();

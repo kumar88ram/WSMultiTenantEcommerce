@@ -29,6 +29,18 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.Property(t => t.PlanId)
             .IsRequired();
 
+        builder.Property(t => t.DefaultMetaTitle)
+            .HasMaxLength(256);
+
+        builder.Property(t => t.DefaultMetaDescription)
+            .HasMaxLength(512);
+
+        builder.Property(t => t.DefaultMetaKeywords)
+            .HasMaxLength(512);
+
+        builder.Property(t => t.DefaultOgImageUrl)
+            .HasMaxLength(512);
+
         builder.Property(t => t.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
 

@@ -79,6 +79,10 @@ namespace MultiTenantEcommerce.Infrastructure.Migrations.Admin
                     DbConnectionString = table.Column<string>(type: "nvarchar(2048)", maxLength: 2048, nullable: false),
                     PlanId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    DefaultMetaTitle = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    DefaultMetaDescription = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
+                    DefaultMetaKeywords = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
+                    DefaultOgImageUrl = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
