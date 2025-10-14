@@ -1,4 +1,4 @@
-using System;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.ApplicationModel;
@@ -6,33 +6,35 @@ using Microsoft.Maui.Controls;
 using MultiTenantEcommerce.Maui.Models;
 using MultiTenantEcommerce.Maui.Services;
 using MultiTenantEcommerce.Maui.Views;
+using System.Linq;
 
 namespace MultiTenantEcommerce.Maui.ViewModels;
 
-public partial class ProfileViewModel : ObservableObject
+public partial class ProfileViewModel : BaseViewModel
 {
     private readonly ApiService _apiService;
-    private readonly Func<OrderHistoryPage> _orderHistoryPageFactory;
-
-    private bool _hasLoaded;
+    private readonly AuthService _authService;
+    private readonly Func<OtpLoginPage> _loginPageFactory;
 
     [ObservableProperty]
     private UserProfile? _profile;
 
     [ObservableProperty]
-    private bool _isBusy;
+    private ObservableCollection<OrderSummary> _recentOrders = new();
 
     [ObservableProperty]
-    private string? _errorMessage;
+    private ObservableCollection<SupportTicket> _supportTickets = new();
 
-    public ProfileViewModel(ApiService apiService, Func<OrderHistoryPage> orderHistoryPageFactory)
+    public ProfileViewModel(ApiService apiService, AuthService authService, Func<OtpLoginPage> loginPageFactory)
     {
         _apiService = apiService;
-        _orderHistoryPageFactory = orderHistoryPageFactory;
+        _authService = authService;
+        _loginPageFactory = loginPageFactory;
+        Title = "Profile";
     }
 
     [RelayCommand]
-    private async Task LoadAsync()
+    private async Task InitializeAsync()
     {
         if (IsBusy)
         {
@@ -42,14 +44,15 @@ public partial class ProfileViewModel : ObservableObject
         try
         {
             IsBusy = true;
-            ErrorMessage = null;
-
             Profile = await _apiService.GetProfileAsync();
-            _hasLoaded = true;
+            var orders = await _apiService.GetOrderHistoryAsync();
+            RecentOrders = new ObservableCollection<OrderSummary>(orders.Take(3));
+            var tickets = await _apiService.GetSupportTicketsAsync();
+            SupportTickets = new ObservableCollection<SupportTicket>(tickets);
         }
         catch (Exception ex)
         {
-            ErrorMessage = ex.Message;
+            await Shell.Current.DisplayAlert("Profile", ex.Message, "OK");
         }
         finally
         {
@@ -58,14 +61,37 @@ public partial class ProfileViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task NavigateToOrdersAsync()
+    private Task ViewAllOrdersAsync()
     {
-        var page = _orderHistoryPageFactory();
-        if (Application.Current.MainPage is NavigationPage navigationPage)
-        {
-            await MainThread.InvokeOnMainThreadAsync(() => navigationPage.Navigation.PushAsync(page));
-        }
+        return Shell.Current.GoToAsync(nameof(OrderHistoryPage));
     }
 
-    public bool ShouldLoad() => !_hasLoaded;
+    [RelayCommand]
+    private Task ManageAddressesAsync()
+    {
+        return Shell.Current.GoToAsync(nameof(AddressBookPage));
+    }
+
+    [RelayCommand]
+    private Task ViewSupportTicketsAsync()
+    {
+        return Shell.Current.GoToAsync(nameof(SupportTicketsPage));
+    }
+
+    [RelayCommand]
+    private async Task ChangePasswordAsync()
+    {
+        await Shell.Current.DisplayAlert("Security", "Password change is managed on the web portal.", "OK");
+    }
+
+    [RelayCommand]
+    private async Task LogoutAsync()
+    {
+        await _authService.LogoutAsync();
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            var loginPage = _loginPageFactory();
+            Application.Current.MainPage = new NavigationPage(loginPage);
+        });
+    }
 }

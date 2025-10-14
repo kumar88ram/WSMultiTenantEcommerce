@@ -2,11 +2,11 @@ using MultiTenantEcommerce.Maui.ViewModels;
 
 namespace MultiTenantEcommerce.Maui.Views;
 
-public partial class OrderHistoryPage : ContentPage
+public partial class CheckoutPage : ContentPage
 {
-    private OrderHistoryViewModel ViewModel => (OrderHistoryViewModel)BindingContext;
+    private CheckoutViewModel ViewModel => (CheckoutViewModel)BindingContext;
 
-    public OrderHistoryPage(OrderHistoryViewModel viewModel)
+    public CheckoutPage(CheckoutViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
@@ -19,5 +19,11 @@ public partial class OrderHistoryPage : ContentPage
         {
             ViewModel.InitializeCommand.Execute(null);
         }
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        ViewModel.Dispose();
     }
 }

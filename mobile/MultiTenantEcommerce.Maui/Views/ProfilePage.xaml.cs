@@ -1,25 +1,23 @@
-using Microsoft.Maui.Controls;
 using MultiTenantEcommerce.Maui.ViewModels;
 
 namespace MultiTenantEcommerce.Maui.Views;
 
 public partial class ProfilePage : ContentPage
 {
-    private readonly ProfileViewModel _viewModel;
+    private ProfileViewModel ViewModel => (ProfileViewModel)BindingContext;
 
     public ProfilePage(ProfileViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = _viewModel = viewModel;
+        BindingContext = viewModel;
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
-
-        if (_viewModel.ShouldLoad())
+        if (ViewModel.InitializeCommand.CanExecute(null))
         {
-            _ = _viewModel.LoadCommand.ExecuteAsync(null);
+            ViewModel.InitializeCommand.Execute(null);
         }
     }
 }

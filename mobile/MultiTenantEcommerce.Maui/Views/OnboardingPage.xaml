@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:MultiTenantEcommerce.Maui.ViewModels"
+             x:Class="MultiTenantEcommerce.Maui.Views.OnboardingPage"
+             x:DataType="viewModels:OnboardingViewModel"
+             BackgroundColor="{StaticResource BackgroundColor}">
+    <Grid RowDefinitions="* auto">
+        <CarouselView ItemsSource="{Binding Slides}" IndicatorView="indicator">
+            <CarouselView.ItemTemplate>
+                <DataTemplate x:DataType="models:OnboardingSlide" xmlns:models="clr-namespace:MultiTenantEcommerce.Maui.Models">
+                    <VerticalStackLayout Padding="32" Spacing="24" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Frame HeightRequest="220" WidthRequest="220" BackgroundColor="White" CornerRadius="110" HasShadow="False" HorizontalOptions="Center">
+                            <Label Text="{Binding Illustration}" HorizontalOptions="Center" VerticalOptions="Center" FontSize="48" />
+                        </Frame>
+                        <Label Text="{Binding Title}" Style="{StaticResource HeadlineLabelStyle}" HorizontalTextAlignment="Center" />
+                        <Label Text="{Binding Description}" Style="{StaticResource SubtleLabelStyle}" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CarouselView.ItemTemplate>
+        </CarouselView>
+        <VerticalStackLayout Grid.Row="1" Padding="32" Spacing="16">
+            <IndicatorView x:Name="indicator" HorizontalOptions="Center" />
+            <Button Text="Get started" Command="{Binding CompleteCommand}" Style="{StaticResource PrimaryButtonStyle}" />
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

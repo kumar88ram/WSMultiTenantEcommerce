@@ -1,26 +1,60 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:MultiTenantEcommerce.Maui.ViewModels"
+             xmlns:models="clr-namespace:MultiTenantEcommerce.Maui.Models"
              x:Class="MultiTenantEcommerce.Maui.Views.ProfilePage"
+             x:DataType="viewModels:ProfileViewModel"
              Title="Profile">
     <ScrollView>
-        <VerticalStackLayout Padding="24" Spacing="16">
-            <Label Text="Account Overview" FontSize="24" HorizontalOptions="Center" />
-
-            <Frame BorderColor="LightGray" CornerRadius="12" Padding="16">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="{Binding Profile.FullName, StringFormat='Name: {0}'}" />
-                    <Label Text="{Binding Profile.Email, StringFormat='Email: {0}'}" />
-                    <Label Text="{Binding Profile.PhoneNumber, StringFormat='Phone: {0}'}" />
+        <VerticalStackLayout Padding="16" Spacing="20">
+            <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="{Binding Profile.FullName}" FontSize="24" FontAttributes="Bold" />
+                    <Label Text="{Binding Profile.Email}" Style="{StaticResource SubtleLabelStyle}" />
+                    <Label Text="{Binding Profile.PhoneNumber}" Style="{StaticResource SubtleLabelStyle}" />
                     <Label Text="{Binding Profile.LoyaltyLevel, StringFormat='Loyalty: {0}'}" />
+                    <Label Text="{Binding Profile.LoyaltyPoints, StringFormat='Points: {0}'}" />
                 </VerticalStackLayout>
             </Frame>
 
-            <Button Text="Refresh" Command="{Binding LoadCommand}" />
-            <Button Text="View Order History" Command="{Binding NavigateToOrdersCommand}" />
+            <Button Text="Manage addresses" Command="{Binding ManageAddressesCommand}" Style="{StaticResource PrimaryButtonStyle}" />
+            <Button Text="Support tickets" Command="{Binding ViewSupportTicketsCommand}" />
+            <Button Text="Change password" Command="{Binding ChangePasswordCommand}" />
 
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-            <Label Text="{Binding ErrorMessage}" TextColor="Red" />
+            <Label Text="Recent orders" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding RecentOrders}" SelectionMode="None" HeightRequest="200">
+                <CollectionView.EmptyView>
+                    <Label Text="No recent orders." />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:OrderSummary">
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,8">
+                            <Label Text="{Binding OrderId}" />
+                            <Label Grid.Column="1" Text="{Binding Total, StringFormat='${0:F2}'}" HorizontalTextAlignment="End" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Button Text="View all orders" Command="{Binding ViewAllOrdersCommand}" />
+
+            <Label Text="Support" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding SupportTickets}" SelectionMode="None" HeightRequest="160">
+                <CollectionView.EmptyView>
+                    <Label Text="No tickets" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:SupportTicket">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding Subject}" FontAttributes="Bold" />
+                            <Label Text="{Binding Status}" Style="{StaticResource SubtleLabelStyle}" />
+                            <Label Text="{Binding LastMessagePreview}" Style="{StaticResource SubtleLabelStyle}" />
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button Text="Log out" Command="{Binding LogoutCommand}" TextColor="{StaticResource PrimaryColor}" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

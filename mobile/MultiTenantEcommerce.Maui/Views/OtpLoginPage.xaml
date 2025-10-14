@@ -2,7 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:MultiTenantEcommerce.Maui.Converters"
+             xmlns:viewModels="clr-namespace:MultiTenantEcommerce.Maui.ViewModels"
              x:Class="MultiTenantEcommerce.Maui.Views.OtpLoginPage"
+             x:DataType="viewModels:OtpLoginViewModel"
              Title="Sign In">
     <ContentPage.Resources>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
@@ -10,21 +12,29 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="16">
-            <Label Text="Welcome Back" FontSize="24" HorizontalOptions="Center" />
-            <Label Text="Use your phone number to request a one-time passcode." FontSize="14" HorizontalOptions="Center" TextColor="Gray" />
+            <Label Text="Welcome Back" FontSize="28" FontAttributes="Bold" HorizontalOptions="Center" />
+            <Label Text="Securely sign in with your verified number." Style="{StaticResource SubtleLabelStyle}" HorizontalOptions="Center" />
 
             <Entry Placeholder="Phone number" Keyboard="Telephone" Text="{Binding PhoneNumber}" />
             <Button Text="Request OTP"
                     Command="{Binding RequestOtpCommand}"
-                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}" />
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
+                    Style="{StaticResource PrimaryButtonStyle}" />
 
-            <Entry Placeholder="One-time passcode"
-                   Text="{Binding OtpCode}"
-                   IsEnabled="{Binding IsOtpRequested}"
-                   Keyboard="Numeric" />
+            <Grid ColumnDefinitions="*,auto" RowDefinitions="Auto">
+                <Entry Placeholder="One-time passcode"
+                       Grid.Column="0"
+                       Text="{Binding OtpCode}"
+                       Keyboard="Numeric"
+                       MaxLength="6"
+                       IsEnabled="{Binding IsOtpRequested}" />
+                <Label Grid.Column="1" VerticalTextAlignment="Center" Text="{Binding SecondsRemaining, StringFormat='({0}s)'}" />
+            </Grid>
+
             <Button Text="Verify"
                     Command="{Binding VerifyOtpCommand}"
-                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}" />
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
+                    Style="{StaticResource PrimaryButtonStyle}" />
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Label Text="{Binding StatusMessage}" TextColor="{Binding StatusColor}" HorizontalOptions="Center" />

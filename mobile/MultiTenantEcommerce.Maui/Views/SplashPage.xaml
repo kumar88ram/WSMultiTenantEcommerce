@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:MultiTenantEcommerce.Maui.ViewModels"
+             x:Class="MultiTenantEcommerce.Maui.Views.SplashPage"
+             x:DataType="viewModels:SplashViewModel"
+             BackgroundColor="{StaticResource PrimaryColor}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <VerticalStackLayout Grid.Row="0" VerticalOptions="Center" HorizontalOptions="Center">
+            <Label Text="Nazmart" FontSize="36" FontAttributes="Bold" TextColor="White" />
+            <Label Text="Tenant Shop" TextColor="White" Opacity="0.7" />
+        </VerticalStackLayout>
+        <ActivityIndicator Grid.Row="1" IsRunning="True" Color="White" Margin="0,40" />
+    </Grid>
+</ContentPage>

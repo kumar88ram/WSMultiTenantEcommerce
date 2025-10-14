@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="MultiTenantEcommerce.Maui.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:MultiTenantEcommerce.Maui.Views">
+    <TabBar>
+        <Tab Title="Home">
+            <ShellContent Route="Home" ContentTemplate="{DataTemplate views:HomePage}" />
+        </Tab>
+        <Tab Title="Wishlist">
+            <ShellContent Route="Wishlist" ContentTemplate="{DataTemplate views:WishlistPage}" />
+        </Tab>
+        <Tab Title="Cart">
+            <ShellContent Route="Cart" ContentTemplate="{DataTemplate views:CartPage}" />
+        </Tab>
+        <Tab Title="Profile">
+            <ShellContent Route="Profile" ContentTemplate="{DataTemplate views:ProfilePage}" />
+        </Tab>
+    </TabBar>
+</Shell>

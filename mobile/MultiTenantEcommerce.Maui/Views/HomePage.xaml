@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:MultiTenantEcommerce.Maui.ViewModels"
+             xmlns:models="clr-namespace:MultiTenantEcommerce.Maui.Models"
+             x:Class="MultiTenantEcommerce.Maui.Views.HomePage"
+             x:DataType="viewModels:HomeViewModel"
+             BackgroundColor="{StaticResource BackgroundColor}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="24">
+            <StackLayout Orientation="Horizontal" Spacing="8">
+                <VerticalStackLayout>
+                    <Label Text="Discover" FontSize="32" FontAttributes="Bold" />
+                    <Label Text="Tenant curated picks" Style="{StaticResource SubtleLabelStyle}" />
+                </VerticalStackLayout>
+            </StackLayout>
+
+            <CarouselView ItemsSource="{Binding Campaigns}" HeightRequest="180" IndicatorView="campaignIndicators">
+                <CarouselView.ItemTemplate>
+                    <DataTemplate x:DataType="models:CampaignBanner">
+                        <Frame CornerRadius="20" Padding="16" BackgroundColor="White" HasShadow="False">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="18" />
+                                <Label Grid.Row="1" Text="{Binding Subtitle}" Style="{StaticResource SubtleLabelStyle}" />
+                            </Grid>
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=ViewCampaignCommand}" CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                    </DataTemplate>
+                </CarouselView.ItemTemplate>
+            </CarouselView>
+            <IndicatorView x:Name="campaignIndicators" HorizontalOptions="Center" />
+
+            <VerticalStackLayout>
+                <Label Text="Featured" Style="{StaticResource SectionTitleLabelStyle}" />
+                <CollectionView ItemsSource="{Binding FeaturedProducts}" ItemsLayout="HorizontalList" SelectionMode="None" HeightRequest="260">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Product">
+                            <Frame WidthRequest="180" CornerRadius="18" Padding="12" Margin="0,0,12,0" HasShadow="False" BackgroundColor="White">
+                                <VerticalStackLayout Spacing="8">
+                                    <Image Source="{Binding ImageUrls[0]}" HeightRequest="120" Aspect="AspectFill" />
+                                    <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="16" />
+                                    <Label Text="{Binding Price, StringFormat='${0:F2}'}" />
+                                    <Button Text="View"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=ViewProductCommand}"
+                                            CommandParameter="{Binding .}" />
+                                </VerticalStackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Shop by category" Style="{StaticResource SectionTitleLabelStyle}" />
+                <FlexLayout BindableLayout.ItemsSource="{Binding Categories}" Wrap="Wrap" JustifyContent="SpaceBetween">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="models:Category">
+                            <Frame WidthRequest="160" Padding="16" CornerRadius="16" BackgroundColor="White" Margin="0,0,12,12" HasShadow="False">
+                                <VerticalStackLayout>
+                                    <Label Text="{Binding Name}" FontAttributes="Bold" />
+                                    <Label Text="{Binding Description}" Style="{StaticResource SubtleLabelStyle}" />
+                                </VerticalStackLayout>
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=ViewCategoryCommand}" CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
+                            </Frame>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

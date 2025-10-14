@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:MultiTenantEcommerce.Maui.ViewModels"
+             x:Class="MultiTenantEcommerce.Maui.Views.RefundRequestPage"
+             x:DataType="viewModels:RefundRequestViewModel"
+             Title="Refund">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <Label Text="Order" FontAttributes="Bold" />
+            <Label Text="{Binding OrderId}" />
+
+            <Label Text="Reason" FontAttributes="Bold" />
+            <Picker ItemsSource="{Binding Reasons}" SelectedItem="{Binding SelectedReason}" />
+
+            <Label Text="Details" FontAttributes="Bold" />
+            <Editor HeightRequest="120" Text="{Binding Details}" />
+
+            <Button Text="Submit" Command="{Binding SubmitCommand}" Style="{StaticResource PrimaryButtonStyle}" />
+            <Label Text="Thank you. We will review your request." IsVisible="{Binding IsSubmitted}" TextColor="{StaticResource PrimaryColor}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
