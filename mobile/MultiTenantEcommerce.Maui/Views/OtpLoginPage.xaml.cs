@@ -3,9 +3,9 @@ using MultiTenantEcommerce.Maui.ViewModels;
 
 namespace MultiTenantEcommerce.Maui.Views;
 
-public partial class LoginPage : ContentPage
+public partial class OtpLoginPage : ContentPage
 {
-    public LoginPage(LoginViewModel viewModel)
+    public OtpLoginPage(OtpLoginViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;

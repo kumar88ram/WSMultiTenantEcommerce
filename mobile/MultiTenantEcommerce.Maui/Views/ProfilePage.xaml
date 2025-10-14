@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MultiTenantEcommerce.Maui.Views.ProfilePage"
+             Title="Profile">
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+            <Label Text="Account Overview" FontSize="24" HorizontalOptions="Center" />
+
+            <Frame BorderColor="LightGray" CornerRadius="12" Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="{Binding Profile.FullName, StringFormat='Name: {0}'}" />
+                    <Label Text="{Binding Profile.Email, StringFormat='Email: {0}'}" />
+                    <Label Text="{Binding Profile.PhoneNumber, StringFormat='Phone: {0}'}" />
+                    <Label Text="{Binding Profile.LoyaltyLevel, StringFormat='Loyalty: {0}'}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="Refresh" Command="{Binding LoadCommand}" />
+            <Button Text="View Order History" Command="{Binding NavigateToOrdersCommand}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding ErrorMessage}" TextColor="Red" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
