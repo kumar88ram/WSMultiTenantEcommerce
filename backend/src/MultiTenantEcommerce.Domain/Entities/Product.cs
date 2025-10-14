@@ -13,4 +13,5 @@ public class Product : BaseEntity
     public ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
     public ICollection<Inventory> Inventory { get; set; } = new List<Inventory>();
     public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
+    public ICollection<ProductReview> Reviews { get; set; } = new List<ProductReview>();
 }
