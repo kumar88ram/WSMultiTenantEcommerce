@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MultiTenantEcommerce.Application.Abstractions;
+using MultiTenantEcommerce.Application.Models;
 using MultiTenantEcommerce.Application.Services;
 using MultiTenantEcommerce.Infrastructure.BackgroundWorkers;
 using MultiTenantEcommerce.Infrastructure.MultiTenancy;
@@ -12,6 +13,7 @@ using MultiTenantEcommerce.Infrastructure.Persistence.Repositories;
 using MultiTenantEcommerce.Infrastructure.Security;
 using MultiTenantEcommerce.Infrastructure.Shipping;
 using MultiTenantEcommerce.Infrastructure.Storage;
+using MultiTenantEcommerce.Infrastructure.Notifications;
 
 namespace MultiTenantEcommerce.Infrastructure;
 
@@ -20,6 +22,8 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<MultiTenancyOptions>(configuration.GetSection("MultiTenancy"));
+        services.Configure<OtpOptions>(configuration.GetSection("Otp"));
+        services.Configure<PasswordResetOptions>(configuration.GetSection("PasswordReset"));
 
         services.AddDbContext<AdminDbContext>((sp, options) =>
         {
@@ -80,6 +84,8 @@ public static class DependencyInjection
         services.AddScoped<IMediaService, MediaService>();
         services.AddSingleton<IEmailNotificationQueue, EmailNotificationQueue>();
         services.AddSingleton<IEmailNotificationSender, LoggingEmailNotificationSender>();
+        services.AddSingleton<ISmsSender, LoggingSmsSender>();
+        services.AddSingleton<IEmailSender, LoggingEmailSender>();
         services.AddSingleton<ITenantBackupService, LoggingTenantBackupService>();
         services.AddSingleton<ITenantBackgroundJobCoordinator, TenantBackgroundJobCoordinator>();
         services.AddSingleton<IShippingCarrierAdapter, NullShippingCarrierAdapter>();
@@ -100,6 +106,7 @@ public static class DependencyInjection
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenFactory, JwtTokenFactory>();
+        services.AddScoped<IOtpService, OtpService>();
         services.AddScoped<IAuthService, AuthService>();
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));

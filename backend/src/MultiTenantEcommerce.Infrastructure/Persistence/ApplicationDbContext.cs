@@ -23,6 +23,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<OneTimePassword> OneTimePasswords => Set<OneTimePassword>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<StoreSetting> StoreSettings => Set<StoreSetting>();
     public DbSet<Theme> Themes => Set<Theme>();
     public DbSet<Category> Categories => Set<Category>();
@@ -77,6 +79,8 @@ public class ApplicationDbContext : DbContext
             modelBuilder.Entity<Role>().HasQueryFilter(r => r.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<UserRole>().HasQueryFilter(ur => ur.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<RefreshToken>().HasQueryFilter(rt => rt.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<OneTimePassword>().HasQueryFilter(otp => otp.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<PasswordResetToken>().HasQueryFilter(prt => prt.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<StoreSetting>().HasQueryFilter(s => s.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<Theme>().HasQueryFilter(t => t.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<Category>().HasQueryFilter(c => c.TenantId == _tenantResolver.CurrentTenantId);
