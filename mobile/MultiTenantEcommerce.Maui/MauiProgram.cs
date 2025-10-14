@@ -1,5 +1,6 @@
 using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Networking;
 using MultiTenantEcommerce.Maui.Services;
 using MultiTenantEcommerce.Maui.ViewModels;
 using MultiTenantEcommerce.Maui.Views;
@@ -23,10 +24,24 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        builder.Services.AddSingleton<ApiService>();
+        builder.Services.AddSingleton<IConnectivity>(_ => Connectivity.Current);
         builder.Services.AddSingleton<TokenStorageService>();
-        builder.Services.AddTransient<LoginViewModel>();
-        builder.Services.AddTransient<LoginPage>();
+        builder.Services.AddSingleton(sp =>
+        {
+            var client = new HttpClient
+            {
+                BaseAddress = new Uri("https://localhost:5001")
+            };
+            return client;
+        });
+        builder.Services.AddSingleton<ApiService>();
+
+        builder.Services.AddTransient<OtpLoginViewModel>();
+        builder.Services.AddTransient<OtpLoginPage>();
+        builder.Services.AddTransient<ProfileViewModel>();
+        builder.Services.AddTransient<ProfilePage>();
+        builder.Services.AddTransient<OrderHistoryViewModel>();
+        builder.Services.AddTransient<OrderHistoryPage>();
 
         return builder.Build();
     }

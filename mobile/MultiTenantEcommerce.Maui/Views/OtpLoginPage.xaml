@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:MultiTenantEcommerce.Maui.Converters"
+             x:Class="MultiTenantEcommerce.Maui.Views.OtpLoginPage"
+             Title="Sign In">
+    <ContentPage.Resources>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+            <Label Text="Welcome Back" FontSize="24" HorizontalOptions="Center" />
+            <Label Text="Use your phone number to request a one-time passcode." FontSize="14" HorizontalOptions="Center" TextColor="Gray" />
+
+            <Entry Placeholder="Phone number" Keyboard="Telephone" Text="{Binding PhoneNumber}" />
+            <Button Text="Request OTP"
+                    Command="{Binding RequestOtpCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}" />
+
+            <Entry Placeholder="One-time passcode"
+                   Text="{Binding OtpCode}"
+                   IsEnabled="{Binding IsOtpRequested}"
+                   Keyboard="Numeric" />
+            <Button Text="Verify"
+                    Command="{Binding VerifyOtpCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{Binding StatusColor}" HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
