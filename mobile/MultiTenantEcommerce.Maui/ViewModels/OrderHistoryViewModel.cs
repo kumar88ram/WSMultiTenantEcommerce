@@ -1,32 +1,29 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Maui.Controls;
 using MultiTenantEcommerce.Maui.Models;
 using MultiTenantEcommerce.Maui.Services;
+using MultiTenantEcommerce.Maui.Views;
+using System.Collections.Generic;
 
 namespace MultiTenantEcommerce.Maui.ViewModels;
 
-public partial class OrderHistoryViewModel : ObservableObject
+public partial class OrderHistoryViewModel : BaseViewModel
 {
     private readonly ApiService _apiService;
 
-    private bool _hasLoaded;
-
-    public ObservableCollection<OrderSummary> Orders { get; } = new();
-
     [ObservableProperty]
-    private bool _isBusy;
-
-    [ObservableProperty]
-    private string? _errorMessage;
+    private ObservableCollection<OrderSummary> _orders = new();
 
     public OrderHistoryViewModel(ApiService apiService)
     {
         _apiService = apiService;
+        Title = "Orders";
     }
 
     [RelayCommand]
-    private async Task LoadAsync()
+    private async Task InitializeAsync()
     {
         if (IsBusy)
         {
@@ -36,21 +33,13 @@ public partial class OrderHistoryViewModel : ObservableObject
         try
         {
             IsBusy = true;
-            ErrorMessage = null;
-
             var orders = await _apiService.GetOrderHistoryAsync();
-
-            Orders.Clear();
-            foreach (var order in orders)
-            {
-                Orders.Add(order);
-            }
-
-            _hasLoaded = true;
+            Orders = new ObservableCollection<OrderSummary>(orders);
+            IsEmpty = Orders.Count == 0;
         }
         catch (Exception ex)
         {
-            ErrorMessage = ex.Message;
+            await Shell.Current.DisplayAlert("Orders", ex.Message, "OK");
         }
         finally
         {
@@ -58,5 +47,23 @@ public partial class OrderHistoryViewModel : ObservableObject
         }
     }
 
-    public bool ShouldLoad() => !_hasLoaded;
+    [RelayCommand]
+    private Task ViewOrderAsync(OrderSummary summary)
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            [nameof(OrderDetailViewModel.OrderId)] = summary.OrderId
+        };
+        return Shell.Current.GoToAsync(nameof(OrderDetailPage), parameters);
+    }
+
+    [RelayCommand]
+    private Task RequestRefundAsync(OrderSummary summary)
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            [nameof(RefundRequestViewModel.OrderId)] = summary.OrderId
+        };
+        return Shell.Current.GoToAsync(nameof(RefundRequestPage), parameters);
+    }
 }

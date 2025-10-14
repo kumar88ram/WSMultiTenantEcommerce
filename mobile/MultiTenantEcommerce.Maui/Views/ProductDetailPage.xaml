@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:MultiTenantEcommerce.Maui.ViewModels"
+             xmlns:models="clr-namespace:MultiTenantEcommerce.Maui.Models"
+             x:Class="MultiTenantEcommerce.Maui.Views.ProductDetailPage"
+             x:DataType="viewModels:ProductDetailViewModel"
+             Title="Details">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="20">
+            <CarouselView ItemsSource="{Binding ImageGallery}" HeightRequest="280" IndicatorView="imageIndicators">
+                <CarouselView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame CornerRadius="18" HasShadow="False" Padding="0">
+                            <Image Source="{Binding .}" Aspect="AspectFill" />
+                        </Frame>
+                    </DataTemplate>
+                </CarouselView.ItemTemplate>
+            </CarouselView>
+            <IndicatorView x:Name="imageIndicators" HorizontalOptions="Center" />
+
+            <Label Text="{Binding Product.Name}" FontSize="24" FontAttributes="Bold" />
+            <Label Text="{Binding Product.Description}" Style="{StaticResource SubtleLabelStyle}" />
+            <Label Text="{Binding Product.Price, StringFormat='${0:F2}'}" FontSize="20" FontAttributes="Bold" />
+
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Variants}" Spacing="12">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:ProductVariant">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" />
+                            <Picker ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedOption}" />
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <Grid ColumnDefinitions="Auto,Auto,Auto" ColumnSpacing="12" VerticalOptions="Center">
+                <Button Text="-" Command="{Binding ChangeQuantityCommand}" CommandParameter="{x:Int32 -1}" />
+                <Label Grid.Column="1" Text="{Binding Quantity}" VerticalTextAlignment="Center" HorizontalTextAlignment="Center" FontSize="18" />
+                <Button Grid.Column="2" Text="+" Command="{Binding ChangeQuantityCommand}" CommandParameter="{x:Int32 1}" />
+            </Grid>
+
+            <Button Text="Add to cart" Command="{Binding AddToCartCommand}" Style="{StaticResource PrimaryButtonStyle}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

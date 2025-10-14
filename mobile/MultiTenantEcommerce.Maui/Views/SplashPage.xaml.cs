@@ -2,11 +2,11 @@ using MultiTenantEcommerce.Maui.ViewModels;
 
 namespace MultiTenantEcommerce.Maui.Views;
 
-public partial class OrderHistoryPage : ContentPage
+public partial class SplashPage : ContentPage
 {
-    private OrderHistoryViewModel ViewModel => (OrderHistoryViewModel)BindingContext;
+    private SplashViewModel ViewModel => (SplashViewModel)BindingContext;
 
-    public OrderHistoryPage(OrderHistoryViewModel viewModel)
+    public SplashPage(SplashViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
