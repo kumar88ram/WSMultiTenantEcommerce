@@ -7,6 +7,8 @@ using Microsoft.Extensions.Options;
 using MultiTenantEcommerce.Presentation.MultiTenancy;
 using MultiTenantEcommerce.Infrastructure.Persistence;
 using MultiTenantEcommerce.Infrastructure.MultiTenancy;
+using MultiTenantEcommerce.Presentation.Middleware;
+using MultiTenantEcommerce.Presentation.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddMultiTenancy();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddMemoryCache();
+builder.Services.Configure<RateLimitingOptions>(builder.Configuration.GetSection("RateLimiting"));
 
 builder.Services.AddAuthentication(options =>
 {
@@ -37,7 +41,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(AuthorizationPolicies.ConfigurePolicies);
 
 var app = builder.Build();
 
@@ -78,6 +82,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseMultiTenancy();
+app.UseMiddleware<RateLimitingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
