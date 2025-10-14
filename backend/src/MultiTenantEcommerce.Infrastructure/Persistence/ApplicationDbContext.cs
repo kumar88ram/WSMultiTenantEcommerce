@@ -52,6 +52,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<RefundRequestItem> RefundRequestItems => Set<RefundRequestItem>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<PromotionCampaign> PromotionCampaigns => Set<PromotionCampaign>();
+    public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
+    public DbSet<SupportTicketMessage> SupportTicketMessages => Set<SupportTicketMessage>();
+    public DbSet<SupportTicketAttachment> SupportTicketAttachments => Set<SupportTicketAttachment>();
+    public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -100,6 +104,10 @@ public class ApplicationDbContext : DbContext
             modelBuilder.Entity<TaxRule>().HasQueryFilter(tr => tr.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<RefundRequest>().HasQueryFilter(rr => rr.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<RefundRequestItem>().HasQueryFilter(rri => rri.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<SupportTicket>().HasQueryFilter(st => st.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<SupportTicketMessage>().HasQueryFilter(stm => stm.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<SupportTicketAttachment>().HasQueryFilter(sta => sta.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<ProductReview>().HasQueryFilter(pr => pr.TenantId == _tenantResolver.CurrentTenantId);
         }
     }
 }

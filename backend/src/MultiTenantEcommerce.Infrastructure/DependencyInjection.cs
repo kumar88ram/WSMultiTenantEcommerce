@@ -68,6 +68,9 @@ public static class DependencyInjection
         services.AddScoped<IShippingService, ShippingService>();
         services.AddScoped<ITaxService, TaxService>();
         services.AddScoped<IRefundService, RefundService>();
+        services.AddScoped<ISupportTicketService, SupportTicketService>();
+        services.AddScoped<ISupportTicketAdminService, SupportTicketAdminService>();
+        services.AddScoped<IProductReviewService, ProductReviewService>();
         services.AddScoped<IPromotionEngine, PromotionEngine>();
         services.AddScoped<IPromotionAdminService, PromotionAdminService>();
         services.AddSingleton<IEmailNotificationQueue, EmailNotificationQueue>();
