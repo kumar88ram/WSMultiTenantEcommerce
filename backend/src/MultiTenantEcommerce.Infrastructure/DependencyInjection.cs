@@ -66,7 +66,11 @@ public static class DependencyInjection
         services.AddScoped<ICheckoutService, CheckoutService>();
         services.AddSingleton<IEmailNotificationQueue, EmailNotificationQueue>();
         services.AddSingleton<IEmailNotificationSender, LoggingEmailNotificationSender>();
-        services.AddSingleton<IPaymentGatewayClient, StripeLikePaymentGatewayClient>();
+        services.Configure<PaymentGatewayOptions>(configuration.GetSection("Payments"));
+        services.AddSingleton<IPaymentGateway, StripePaymentGateway>();
+        services.AddSingleton<IPaymentGateway, PayPalPaymentGateway>();
+        services.AddSingleton<IPaymentGateway, RazorpayPaymentGateway>();
+        services.AddScoped<IPaymentGatewayOrchestrator, PaymentGatewayOrchestrator>();
         services.AddHostedService<EmailNotificationWorker>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
