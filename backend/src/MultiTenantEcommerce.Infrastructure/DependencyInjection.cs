@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 using MultiTenantEcommerce.Application.Abstractions;
 using MultiTenantEcommerce.Application.Models;
 using MultiTenantEcommerce.Application.Services;
+using MultiTenantEcommerce.Application.Security;
+using MultiTenantEcommerce.Infrastructure.Auditing;
 using MultiTenantEcommerce.Infrastructure.BackgroundWorkers;
 using MultiTenantEcommerce.Infrastructure.MultiTenancy;
 using MultiTenantEcommerce.Infrastructure.Payments;
@@ -108,6 +110,8 @@ public static class DependencyInjection
         services.AddScoped<ITokenFactory, JwtTokenFactory>();
         services.AddScoped<IOtpService, OtpService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IAuditLogger, AuditLogger>();
+        services.AddScoped<AuditLoggingExamples>();
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
 

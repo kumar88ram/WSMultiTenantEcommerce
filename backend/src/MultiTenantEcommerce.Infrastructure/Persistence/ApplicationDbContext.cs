@@ -60,6 +60,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
     public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
     public DbSet<DailyAnalyticsSummary> DailyAnalyticsSummaries => Set<DailyAnalyticsSummary>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,6 +69,12 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
         modelBuilder.Ignore<Tenant>();
+
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.Property(e => e.Action).HasMaxLength(128);
+            entity.Property(e => e.EntityName).HasMaxLength(256);
+        });
 
         modelBuilder.Entity<UserRole>().HasKey(ur => new { ur.UserId, ur.RoleId, ur.TenantId });
         modelBuilder.Entity<User>().HasIndex(u => new { u.NormalizedUserName, u.TenantId }).IsUnique();
@@ -116,6 +123,7 @@ public class ApplicationDbContext : DbContext
             modelBuilder.Entity<ProductReview>().HasQueryFilter(pr => pr.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<AnalyticsEvent>().HasQueryFilter(ae => ae.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<DailyAnalyticsSummary>().HasQueryFilter(das => das.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<AuditLog>().HasQueryFilter(al => al.TenantId == _tenantResolver.CurrentTenantId);
         }
     }
 }
