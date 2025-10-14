@@ -6,6 +6,7 @@ import { map } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ProductDetail, ProductService, ProductVariant } from '../../services/product.service';
 import { TenantStoreService } from '../../services/tenant-store.service';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-product-detail',
@@ -268,6 +269,7 @@ export class ProductDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly productService = inject(ProductService);
   private readonly tenantStore = inject(TenantStoreService);
+  private readonly cartService = inject(CartService);
   private readonly destroyRef = inject(DestroyRef);
   private productSubscription?: Subscription;
 
@@ -403,6 +405,21 @@ export class ProductDetailComponent {
     }
 
     const label = variant ? `${detail.name} (${variant.name})` : detail.name;
-    this.addToCartFeedback.set(`Added "${label}" to cart.`);
+    const tenant = this.tenant();
+    if (!tenant) {
+      this.addToCartFeedback.set('Unable to determine the tenant store.');
+      return;
+    }
+
+    this.cartService
+      .addItem(tenant, {
+        productId: detail.id,
+        variantId: variant?.id ?? null,
+        quantity: 1
+      })
+      .subscribe({
+        next: () => this.addToCartFeedback.set(`Added "${label}" to cart.`),
+        error: () => this.addToCartFeedback.set('Unable to add the item to your cart. Please try again.')
+      });
   }
 }

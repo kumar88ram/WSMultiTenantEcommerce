@@ -155,6 +155,7 @@ export class AdminLayoutComponent {
   protected readonly navLinks: NavLink[] = [
     { label: 'Tenants', icon: 'groups', routerLink: '/admin/tenants' },
     { label: 'Plans', icon: 'view_quilt', routerLink: '/admin/plans' },
+    { label: 'Orders', icon: 'shopping_cart', routerLink: '/admin/orders' },
     { label: 'Analytics', icon: 'insights', routerLink: '/admin/analytics' },
     { label: 'Plugins', icon: 'extension', routerLink: '/admin/plugins' }
   ];
