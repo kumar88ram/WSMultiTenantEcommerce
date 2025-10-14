@@ -38,6 +38,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<FormDefinition> FormDefinitions => Set<FormDefinition>();
     public DbSet<FormField> FormFields => Set<FormField>();
     public DbSet<WidgetDefinition> WidgetDefinitions => Set<WidgetDefinition>();
+    public DbSet<Cart> Carts => Set<Cart>();
+    public DbSet<CartItem> CartItems => Set<CartItem>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -72,6 +77,11 @@ public class ApplicationDbContext : DbContext
             modelBuilder.Entity<FormField>().HasQueryFilter(f => f.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<WidgetDefinition>().HasQueryFilter(w => w.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<ProductCategory>().HasQueryFilter(pc => pc.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<Cart>().HasQueryFilter(c => c.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<CartItem>().HasQueryFilter(ci => ci.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<Order>().HasQueryFilter(o => o.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<OrderItem>().HasQueryFilter(oi => oi.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<PaymentTransaction>().HasQueryFilter(pt => pt.TenantId == _tenantResolver.CurrentTenantId);
         }
     }
 }

@@ -4,7 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MultiTenantEcommerce.Application.Abstractions;
 using MultiTenantEcommerce.Application.Services;
+using MultiTenantEcommerce.Infrastructure.BackgroundWorkers;
 using MultiTenantEcommerce.Infrastructure.MultiTenancy;
+using MultiTenantEcommerce.Infrastructure.Payments;
 using MultiTenantEcommerce.Infrastructure.Persistence;
 using MultiTenantEcommerce.Infrastructure.Persistence.Repositories;
 using MultiTenantEcommerce.Infrastructure.Security;
@@ -61,6 +63,11 @@ public static class DependencyInjection
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductCatalogService, ProductCatalogService>();
+        services.AddScoped<ICheckoutService, CheckoutService>();
+        services.AddSingleton<IEmailNotificationQueue, EmailNotificationQueue>();
+        services.AddSingleton<IEmailNotificationSender, LoggingEmailNotificationSender>();
+        services.AddSingleton<IPaymentGatewayClient, StripeLikePaymentGatewayClient>();
+        services.AddHostedService<EmailNotificationWorker>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenFactory, JwtTokenFactory>();
