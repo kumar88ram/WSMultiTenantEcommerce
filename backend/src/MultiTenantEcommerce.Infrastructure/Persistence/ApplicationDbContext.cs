@@ -43,6 +43,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
+    public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<PromotionCampaign> PromotionCampaigns => Set<PromotionCampaign>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,6 +84,8 @@ public class ApplicationDbContext : DbContext
             modelBuilder.Entity<Order>().HasQueryFilter(o => o.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<OrderItem>().HasQueryFilter(oi => oi.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<PaymentTransaction>().HasQueryFilter(pt => pt.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<Coupon>().HasQueryFilter(c => c.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<PromotionCampaign>().HasQueryFilter(pc => pc.TenantId == _tenantResolver.CurrentTenantId);
         }
     }
 }

@@ -41,7 +41,10 @@ public record CheckoutRequest(
     string Currency,
     string? CouponCode,
     string PaymentProvider,
-    IReadOnlyDictionary<string, string>? PaymentMetadata);
+    IReadOnlyDictionary<string, string>? PaymentMetadata,
+    decimal? ShippingAmount = null,
+    string? ShippingMethodId = null,
+    string? PaymentMethodId = null);
 
 public record CheckoutResponse(OrderDto Order, PaymentIntentDto PaymentIntent);
 

@@ -46,6 +46,16 @@ public class OrderConfiguration :
 
         builder.HasIndex(o => new { o.TenantId, o.OrderNumber }).IsUnique();
 
+        builder.HasOne(o => o.PromotionCampaign)
+            .WithMany()
+            .HasForeignKey(o => o.PromotionCampaignId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(o => o.Coupon)
+            .WithMany(c => c.Orders)
+            .HasForeignKey(o => o.CouponId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasMany(o => o.Items)
             .WithOne(i => i.Order)
             .HasForeignKey(i => i.OrderId)

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using MultiTenantEcommerce.Application.Abstractions;
 using MultiTenantEcommerce.Application.Models.Orders;
 using MultiTenantEcommerce.Application.Models.Payments;
+using MultiTenantEcommerce.Application.Models.Promotions;
 using MultiTenantEcommerce.Domain.Entities;
 using MultiTenantEcommerce.Infrastructure.Persistence;
 
@@ -19,18 +20,21 @@ public class CheckoutService : ICheckoutService
     private readonly IPaymentGatewayOrchestrator _paymentGatewayOrchestrator;
     private readonly IEmailNotificationQueue _emailQueue;
     private readonly ILogger<CheckoutService> _logger;
+    private readonly IPromotionEngine _promotionEngine;
 
     public CheckoutService(
         ApplicationDbContext dbContext,
         ITenantResolver tenantResolver,
         IPaymentGatewayOrchestrator paymentGatewayOrchestrator,
         IEmailNotificationQueue emailQueue,
+        IPromotionEngine promotionEngine,
         ILogger<CheckoutService> logger)
     {
         _dbContext = dbContext;
         _tenantResolver = tenantResolver;
         _paymentGatewayOrchestrator = paymentGatewayOrchestrator;
         _emailQueue = emailQueue;
+        _promotionEngine = promotionEngine;
         _logger = logger;
     }
 
@@ -144,6 +148,137 @@ public class CheckoutService : ICheckoutService
         return MapCart(cart);
     }
 
+    public async Task<CheckoutConfigurationDto> GetCheckoutConfigurationAsync(CancellationToken cancellationToken = default)
+    {
+        var currency = await ResolveStoreCurrencyAsync(cancellationToken) ?? "USD";
+
+        var shippingMethods = new List<CheckoutShippingMethodDto>
+        {
+            new(
+                "standard",
+                "Standard shipping",
+                9.99m,
+                currency,
+                "Delivered within 4-6 business days",
+                4,
+                6),
+            new(
+                "express",
+                "Express shipping",
+                19.99m,
+                currency,
+                "Delivered within 1-2 business days",
+                1,
+                2)
+        };
+
+        var paymentMethods = new List<CheckoutPaymentMethodDto>
+        {
+            new(
+                "stripe_card",
+                "Credit or debit card",
+                "stripe",
+                "inline_card",
+                "Securely enter your card details without leaving the checkout.",
+                new Dictionary<string, string>
+                {
+                    ["publishableKey"] = "pk_test_inline_card_placeholder"
+                }),
+            new(
+                "stripe_hosted",
+                "Stripe Checkout",
+                "stripe",
+                "hosted_redirect",
+                "Complete your payment on the hosted Stripe checkout page.",
+                null)
+        };
+
+        return new CheckoutConfigurationDto(shippingMethods, paymentMethods);
+    }
+
+    public async Task<CheckoutSessionDto> CreateCheckoutSessionAsync(CreateCheckoutSessionRequestDto request, CancellationToken cancellationToken = default)
+    {
+        var configuration = await GetCheckoutConfigurationAsync(cancellationToken);
+        var shippingMethod = configuration.ShippingMethods.FirstOrDefault(m => string.Equals(m.Id, request.ShippingMethodId, StringComparison.OrdinalIgnoreCase))
+                            ?? throw new InvalidOperationException("The selected shipping method is not available.");
+        var paymentMethod = configuration.PaymentMethods.FirstOrDefault(m => string.Equals(m.Id, request.PaymentMethodId, StringComparison.OrdinalIgnoreCase))
+                            ?? throw new InvalidOperationException("The selected payment method is not available.");
+
+        var metadata = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["shippingMethodId"] = shippingMethod.Id,
+            ["paymentMethodId"] = paymentMethod.Id,
+            ["paymentFlow"] = paymentMethod.Flow,
+            ["returnUrl"] = request.ReturnUrl,
+            ["cancelUrl"] = request.CancelUrl
+        };
+
+        if (request.PaymentData is not null)
+        {
+            foreach (var kvp in request.PaymentData)
+            {
+                metadata[$"payment:{kvp.Key}"] = kvp.Value;
+            }
+        }
+
+        var shippingAddress = request.ShippingAddress;
+        var formattedAddress = FormatAddress(shippingAddress);
+
+        var checkoutRequest = new CheckoutRequest(
+            request.CartId,
+            request.UserId,
+            request.GuestToken,
+            shippingAddress.Email,
+            formattedAddress,
+            formattedAddress,
+            shippingMethod.Currency,
+            request.CouponCode,
+            paymentMethod.Provider,
+            metadata,
+            shippingMethod.Amount,
+            shippingMethod.Id,
+            paymentMethod.Id);
+
+        var response = await CheckoutAsync(checkoutRequest, cancellationToken);
+        var order = response.Order;
+        var paymentIntent = response.PaymentIntent;
+
+        var status = paymentMethod.Flow switch
+        {
+            "hosted_redirect" => "requires_redirect",
+            "inline_card" => "requires_client_confirmation",
+            _ => "processing"
+        };
+
+        var redirectUrl = paymentMethod.Flow == "hosted_redirect" ? paymentIntent.PaymentUrl : null;
+        var clientSecret = paymentMethod.Flow == "inline_card" ? paymentIntent.ClientSecret : null;
+
+        return new CheckoutSessionDto(order.Id, status, redirectUrl, clientSecret);
+    }
+
+    public async Task<PaymentStatusDto?> GetPaymentStatusAsync(Guid orderId, CancellationToken cancellationToken = default)
+    {
+        var order = await _dbContext.Orders
+            .Include(o => o.Payments)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken);
+
+        if (order is null)
+        {
+            return null;
+        }
+
+        var payment = order.Payments
+            .OrderByDescending(p => p.ProcessedAt ?? order.CreatedAt)
+            .FirstOrDefault();
+
+        var paymentStatus = payment?.Status.ToString().ToLowerInvariant() ?? "pending";
+        var orderStatus = order.Status.ToString().ToLowerInvariant();
+        var updatedAt = payment?.ProcessedAt ?? order.UpdatedAt ?? order.CreatedAt;
+
+        return new PaymentStatusDto(order.Id, orderStatus, paymentStatus, updatedAt);
+    }
+
     public async Task<CheckoutResponse> CheckoutAsync(CheckoutRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Email))
@@ -175,6 +310,14 @@ public class CheckoutService : ICheckoutService
             .Where(i => productIds.Contains(i.ProductId))
             .ToListAsync(cancellationToken);
 
+        var categoryLookup = await _dbContext.ProductCategories
+            .Where(pc => productIds.Contains(pc.ProductId))
+            .GroupBy(pc => pc.ProductId)
+            .ToDictionaryAsync(
+                g => g.Key,
+                g => (IReadOnlyCollection<Guid>)g.Select(pc => pc.CategoryId).ToList(),
+                cancellationToken);
+
         foreach (var item in cart.Items)
         {
             var inventory = inventories.FirstOrDefault(i =>
@@ -197,10 +340,29 @@ public class CheckoutService : ICheckoutService
         }
 
         var subtotal = cart.Items.Sum(i => i.UnitPrice * i.Quantity);
-        var discount = CalculateDiscount(subtotal, request.CouponCode);
+        var promotionContext = new PromotionEvaluationContext(
+            tenantId,
+            cart.Items.Select(item =>
+            {
+                var categories = categoryLookup.TryGetValue(item.ProductId, out var value)
+                    ? value
+                    : Array.Empty<Guid>();
+                return new PromotionItemContext(
+                    item.ProductId,
+                    item.ProductVariantId,
+                    item.Quantity,
+                    item.UnitPrice,
+                    categories);
+            }).ToList(),
+            subtotal,
+            request.Currency,
+            request.CouponCode);
+
+        var promotionResult = await _promotionEngine.EvaluateAsync(promotionContext, cancellationToken);
+        var discount = promotionResult.DiscountAmount;
         var taxableAmount = subtotal - discount;
         var tax = Math.Round(taxableAmount * DefaultTaxRate, 2, MidpointRounding.AwayFromZero);
-        var shipping = DefaultShippingCost;
+        var shipping = request.ShippingAmount ?? DefaultShippingCost;
         var grandTotal = taxableAmount + tax + shipping;
 
         var order = new Order
@@ -219,7 +381,9 @@ public class CheckoutService : ICheckoutService
             Email = request.Email,
             ShippingAddress = request.ShippingAddress,
             BillingAddress = request.BillingAddress,
-            CouponCode = request.CouponCode,
+            CouponId = promotionResult.CouponId,
+            CouponCode = promotionResult.CouponCode ?? request.CouponCode,
+            PromotionCampaignId = promotionResult.PromotionCampaignId,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -251,6 +415,16 @@ public class CheckoutService : ICheckoutService
             RawPayload = request.PaymentMetadata is null ? null : JsonSerializer.Serialize(request.PaymentMetadata)
         };
         order.Payments.Add(payment);
+
+        if (promotionResult.CouponId.HasValue)
+        {
+            var appliedCoupon = await _dbContext.Coupons
+                .FirstOrDefaultAsync(c => c.Id == promotionResult.CouponId.Value, cancellationToken);
+            if (appliedCoupon is not null)
+            {
+                appliedCoupon.TimesRedeemed += 1;
+            }
+        }
 
         cart.IsActive = false;
 
@@ -474,6 +648,47 @@ public class CheckoutService : ICheckoutService
         return MapOrder(order);
     }
 
+    private async Task<string?> ResolveStoreCurrencyAsync(CancellationToken cancellationToken)
+    {
+        return await _dbContext.StoreSettings
+            .AsNoTracking()
+            .Where(s => s.TenantId == _tenantResolver.CurrentTenantId)
+            .Select(s => s.Currency)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private static string FormatAddress(CheckoutShippingAddressDto address)
+    {
+        var parts = new List<string>
+        {
+            address.FullName,
+            address.AddressLine1
+        };
+
+        if (!string.IsNullOrWhiteSpace(address.AddressLine2))
+        {
+            parts.Add(address.AddressLine2);
+        }
+
+        var cityLine = string.IsNullOrWhiteSpace(address.Region)
+            ? $"{address.City}, {address.PostalCode}"
+            : $"{address.City}, {address.Region} {address.PostalCode}";
+        parts.Add(cityLine);
+        parts.Add(address.Country);
+
+        if (!string.IsNullOrWhiteSpace(address.Email))
+        {
+            parts.Add(address.Email);
+        }
+
+        if (!string.IsNullOrWhiteSpace(address.Phone))
+        {
+            parts.Add(address.Phone);
+        }
+
+        return string.Join(Environment.NewLine, parts);
+    }
+
     private async Task<Cart?> FindCartAsync(Guid tenantId, Guid? userId, string? guestToken, CancellationToken cancellationToken)
     {
         if (userId is null && string.IsNullOrWhiteSpace(guestToken))
@@ -513,18 +728,6 @@ public class CheckoutService : ICheckoutService
         }
 
         return cart;
-    }
-
-    private static decimal CalculateDiscount(decimal subtotal, string? couponCode)
-    {
-        if (string.IsNullOrWhiteSpace(couponCode))
-        {
-            return 0m;
-        }
-
-        return couponCode.Equals("SAVE10", StringComparison.OrdinalIgnoreCase)
-            ? Math.Round(subtotal * 0.10m, 2, MidpointRounding.AwayFromZero)
-            : 0m;
     }
 
     private async Task ReleaseInventoryAsync(Order order, CancellationToken cancellationToken)

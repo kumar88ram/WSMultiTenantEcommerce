@@ -13,18 +13,20 @@ export interface ShippingMethod {
   estimatedDaysMax?: number;
 }
 
+export type PaymentFlow = 'hosted_redirect' | 'inline_card' | string;
+
 export interface PaymentMethodOption {
   id: string;
   name: string;
   provider: string;
-  type: 'card' | 'wallet' | 'bank_transfer' | 'cash_on_delivery' | string;
+  flow: PaymentFlow;
   instructions?: string;
+  metadata?: Record<string, string>;
 }
 
 export interface CheckoutConfiguration {
   shippingMethods: ShippingMethod[];
   paymentMethods: PaymentMethodOption[];
-  requiresRedirect: boolean;
 }
 
 export interface ShippingAddressPayload {
@@ -40,24 +42,29 @@ export interface ShippingAddressPayload {
 }
 
 export interface CreateCheckoutSessionRequest {
+  cartId?: string;
+  userId?: string;
+  guestToken?: string;
   shippingAddress: ShippingAddressPayload;
   shippingMethodId: string;
   paymentMethodId: string;
   returnUrl: string;
   cancelUrl: string;
+  couponCode?: string;
+  paymentData?: Record<string, string>;
 }
 
 export interface CreateCheckoutSessionResponse {
   orderId: string;
-  status: 'pending' | 'processing' | 'requires_payment_method' | 'requires_action' | 'paid' | 'failed';
+  status: string;
   redirectUrl?: string;
   clientSecret?: string;
 }
 
 export interface PaymentStatusResponse {
   orderId: string;
-  status: 'pending' | 'processing' | 'paid' | 'failed' | 'cancelled';
-  paymentStatus: 'pending' | 'requires_action' | 'succeeded' | 'failed' | 'refunded';
+  status: string;
+  paymentStatus: string;
   updatedAt: string;
 }
 
@@ -67,7 +74,9 @@ export class CheckoutService {
   private readonly baseUrl = `${environment.apiUrl}/store`;
 
   getConfiguration(tenant: string): Observable<CheckoutConfiguration> {
-    return this.http.get<CheckoutConfiguration>(`${this.baseUrl}/${tenant}/checkout/options`);
+    return this.http.get<CheckoutConfiguration>(`${this.baseUrl}/${tenant}/checkout/options`, {
+      headers: { 'X-Tenant': tenant }
+    });
   }
 
   createCheckoutSession(
@@ -76,13 +85,15 @@ export class CheckoutService {
   ): Observable<CreateCheckoutSessionResponse> {
     return this.http.post<CreateCheckoutSessionResponse>(
       `${this.baseUrl}/${tenant}/checkout/session`,
-      request
+      request,
+      { headers: { 'X-Tenant': tenant } }
     );
   }
 
   getPaymentStatus(tenant: string, orderId: string): Observable<PaymentStatusResponse> {
     return this.http.get<PaymentStatusResponse>(
-      `${this.baseUrl}/${tenant}/checkout/status/${orderId}`
+      `${this.baseUrl}/${tenant}/checkout/status/${orderId}`,
+      { headers: { 'X-Tenant': tenant } }
     );
   }
 }

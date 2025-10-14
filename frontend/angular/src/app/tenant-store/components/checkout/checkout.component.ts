@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, Signal, computed, effect, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
@@ -8,10 +8,12 @@ import { CartService } from '../../services/cart.service';
 import {
   CheckoutConfiguration,
   CheckoutService,
-  CreateCheckoutSessionRequest
+  CreateCheckoutSessionRequest,
+  PaymentMethodOption
 } from '../../services/checkout.service';
 import { TenantStoreService } from '../../services/tenant-store.service';
 import { OrderDetail, OrderService } from '../../services/order.service';
+import { CardPaymentDetails, PaymentFlowService } from '../../services/payment-flow.service';
 
 @Component({
   selector: 'app-checkout',
@@ -140,6 +142,11 @@ import { OrderDetail, OrderService } from '../../services/order.service';
               </div>
             </fieldset>
 
+            <div class="field coupon-field">
+              <label for="couponCode">Coupon code</label>
+              <input id="couponCode" type="text" formControlName="couponCode" placeholder="Enter a code" />
+            </div>
+
             <fieldset>
               <legend>Payment method</legend>
               <div class="options" *ngIf="checkoutConfig()?.paymentMethods.length; else noPayment">
@@ -149,6 +156,8 @@ import { OrderDetail, OrderService } from '../../services/order.service';
                     <div class="option-header">
                       <span class="name">{{ method.name }}</span>
                       <span class="provider">{{ method.provider }}</span>
+                      <span class="flow" *ngIf="method.flow === 'inline_card'">In-page</span>
+                      <span class="flow" *ngIf="method.flow === 'hosted_redirect'">Redirect</span>
                     </div>
                     <p class="description" *ngIf="method.instructions">{{ method.instructions }}</p>
                   </div>
@@ -156,8 +165,46 @@ import { OrderDetail, OrderService } from '../../services/order.service';
               </div>
             </fieldset>
 
+            <fieldset
+              class="card-entry"
+              formGroupName="payment"
+              *ngIf="selectedPaymentMethod()?.flow === 'inline_card'"
+            >
+              <legend>Card details</legend>
+
+              <div class="field">
+                <label for="cardholderName">Name on card</label>
+                <input id="cardholderName" type="text" formControlName="cardholderName" />
+                <p class="error" *ngIf="hasCardError('cardholderName')">Please enter the name on the card.</p>
+              </div>
+
+              <div class="field">
+                <label for="cardNumber">Card number</label>
+                <input id="cardNumber" type="text" inputmode="numeric" autocomplete="cc-number" formControlName="cardNumber" />
+                <p class="error" *ngIf="hasCardError('cardNumber')">Please enter a valid card number.</p>
+              </div>
+
+              <div class="field-grid">
+                <div class="field">
+                  <label for="expiryMonth">Expiry month</label>
+                  <input id="expiryMonth" type="text" inputmode="numeric" maxlength="2" formControlName="expiryMonth" />
+                  <p class="error" *ngIf="hasCardError('expiryMonth')">Enter MM.</p>
+                </div>
+                <div class="field">
+                  <label for="expiryYear">Expiry year</label>
+                  <input id="expiryYear" type="text" inputmode="numeric" maxlength="4" formControlName="expiryYear" />
+                  <p class="error" *ngIf="hasCardError('expiryYear')">Enter YYYY.</p>
+                </div>
+                <div class="field">
+                  <label for="cvc">CVC</label>
+                  <input id="cvc" type="text" inputmode="numeric" maxlength="4" formControlName="cvc" />
+                  <p class="error" *ngIf="hasCardError('cvc')">Enter the security code.</p>
+                </div>
+              </div>
+            </fieldset>
+
             <button type="submit" class="submit" [disabled]="checkoutForm.invalid || submitting()">
-              {{ submitting() ? 'Redirecting…' : 'Pay now' }}
+              {{ submitting() ? 'Processing…' : 'Pay now' }}
             </button>
           </form>
 
@@ -276,6 +323,12 @@ import { OrderDetail, OrderService } from '../../services/order.service';
         width: 100%;
       }
 
+      .coupon-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
       .error {
         color: #c62828;
         font-size: 0.85rem;
@@ -317,6 +370,18 @@ import { OrderDetail, OrderService } from '../../services/order.service';
       .option-header .provider {
         font-weight: 500;
         color: rgba(0, 0, 0, 0.7);
+      }
+
+      .option-header .flow {
+        margin-left: auto;
+        margin-right: 0;
+        font-size: 0.75rem;
+        padding: 0.1rem 0.75rem;
+        border-radius: 999px;
+        background: #e3f2fd;
+        color: #0d47a1;
+        font-weight: 600;
+        text-transform: uppercase;
       }
 
       .description,
@@ -465,6 +530,7 @@ export class CheckoutComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly cartService = inject(CartService);
   private readonly checkoutService = inject(CheckoutService);
+  private readonly paymentFlowService = inject(PaymentFlowService);
   private readonly orderService = inject(OrderService);
   private readonly tenantStore = inject(TenantStoreService);
   private readonly formBuilder = inject(FormBuilder);
@@ -516,7 +582,25 @@ export class CheckoutComponent {
       phone: ['']
     }),
     shippingMethodId: ['', Validators.required],
-    paymentMethodId: ['', Validators.required]
+    paymentMethodId: ['', Validators.required],
+    couponCode: [''],
+    payment: this.formBuilder.group({
+      cardholderName: [''],
+      cardNumber: [''],
+      expiryMonth: [''],
+      expiryYear: [''],
+      cvc: ['']
+    })
+  });
+
+  readonly selectedPaymentMethod = computed<PaymentMethodOption | null>(() => {
+    const config = this.checkoutConfig();
+    const selectedId = this.checkoutForm.get('paymentMethodId')?.value;
+    if (!config || !selectedId) {
+      return null;
+    }
+
+    return config.paymentMethods.find(method => method.id === selectedId) ?? null;
   });
 
   private processedReturn = false;
@@ -557,6 +641,36 @@ export class CheckoutComponent {
 
     effect(
       () => {
+        const method = this.selectedPaymentMethod();
+        const paymentGroup = this.checkoutForm.get('payment') as FormGroup | null;
+        if (!paymentGroup) {
+          return;
+        }
+
+        const { cardholderName, cardNumber, expiryMonth, expiryYear, cvc } = paymentGroup.controls;
+        if (method?.flow === 'inline_card') {
+          cardholderName.setValidators([Validators.required]);
+          cardNumber.setValidators([Validators.required, Validators.minLength(12)]);
+          expiryMonth.setValidators([Validators.required, Validators.pattern(/^(0?[1-9]|1[0-2])$/)]);
+          expiryYear.setValidators([Validators.required, Validators.pattern(/^[0-9]{2,4}$/)]);
+          cvc.setValidators([Validators.required, Validators.minLength(3), Validators.maxLength(4)]);
+        } else {
+          cardholderName.clearValidators();
+          cardNumber.clearValidators();
+          expiryMonth.clearValidators();
+          expiryYear.clearValidators();
+          cvc.clearValidators();
+        }
+
+        Object.values(paymentGroup.controls).forEach(control =>
+          control.updateValueAndValidity({ emitEvent: false })
+        );
+      },
+      { allowSignalWrites: true }
+    );
+
+    effect(
+      () => {
         const tenant = this.tenant();
         const orderId = this.orderIdFromReturn();
         const status = this.returnStatus();
@@ -583,12 +697,20 @@ export class CheckoutComponent {
 
     const tenant = this.tenant();
     const cart = this.cartService.cart();
-    if (!tenant || !cart) {
+    const method = this.selectedPaymentMethod();
+    if (!tenant || !cart || !method) {
+      return;
+    }
+
+    const paymentGroup = this.checkoutForm.get('payment') as FormGroup | null;
+    if (method.flow === 'inline_card' && paymentGroup?.invalid) {
+      paymentGroup.markAllAsTouched();
       return;
     }
 
     const shippingAddress = this.checkoutForm.value.shippingAddress!;
     const request: CreateCheckoutSessionRequest = {
+      cartId: cart.id,
       shippingAddress: {
         fullName: shippingAddress.fullName!,
         addressLine1: shippingAddress.addressLine1!,
@@ -603,19 +725,34 @@ export class CheckoutComponent {
       shippingMethodId: this.checkoutForm.value.shippingMethodId!,
       paymentMethodId: this.checkoutForm.value.paymentMethodId!,
       returnUrl: this.buildReturnUrl(tenant),
-      cancelUrl: this.buildCancelUrl(tenant)
+      cancelUrl: this.buildCancelUrl(tenant),
+      couponCode: this.checkoutForm.value.couponCode ?? undefined
     };
 
+    let cardDetails: CardPaymentDetails | undefined;
+    if (method.flow === 'inline_card' && paymentGroup) {
+      const { cardholderName, cardNumber, expiryMonth, expiryYear, cvc } = paymentGroup.value;
+      cardDetails = {
+        cardholderName: cardholderName ?? '',
+        cardNumber: (cardNumber ?? '').replace(/\s+/g, ''),
+        expiryMonth: String(expiryMonth ?? ''),
+        expiryYear: String(expiryYear ?? ''),
+        cvc: String(cvc ?? '')
+      };
+    }
+
     this.submittingSignal.set(true);
-    this.checkoutService.createCheckoutSession(tenant, request).subscribe({
-      next: session => {
-        this.handleCheckoutSession(session);
-      },
-      error: () => {
-        this.submittingSignal.set(false);
-        this.paymentStatusMessageSignal.set('Unable to start the payment flow. Please try again.');
-      }
-    });
+    this.paymentFlowService
+      .initiatePayment(tenant, request, method, cardDetails)
+      .subscribe({
+        next: session => {
+          this.handleCheckoutSession(session);
+        },
+        error: () => {
+          this.submittingSignal.set(false);
+          this.paymentStatusMessageSignal.set('Unable to start the payment flow. Please try again.');
+        }
+      });
   }
 
   hasError(controlName: string): boolean {
@@ -623,16 +760,28 @@ export class CheckoutComponent {
     return !!control && control.invalid && (control.touched || control.dirty);
   }
 
+  hasCardError(controlName: string): boolean {
+    const method = this.selectedPaymentMethod();
+    if (method?.flow !== 'inline_card') {
+      return false;
+    }
+
+    const group = this.checkoutForm.get('payment') as FormGroup | null;
+    const control = group?.get(controlName);
+    return !!control && control.invalid && (control.touched || control.dirty);
+  }
+
   private fetchConfiguration(tenant: string): void {
     this.checkoutService.getConfiguration(tenant).subscribe({
       next: config => this.configSignal.set(config),
-      error: () => this.configSignal.set({ shippingMethods: [], paymentMethods: [], requiresRedirect: true })
+      error: () => this.configSignal.set({ shippingMethods: [], paymentMethods: [] })
     });
   }
 
   private handleCheckoutSession(session: {
     status: string;
     redirectUrl?: string;
+    clientSecret?: string;
     orderId: string;
   }): void {
     if (session.redirectUrl) {
@@ -643,19 +792,31 @@ export class CheckoutComponent {
     }
 
     this.submittingSignal.set(false);
+    const tenant = this.tenant();
+    if (!tenant) {
+      return;
+    }
+
+    if (session.clientSecret || session.status === 'requires_client_confirmation' || session.status === 'processing') {
+      this.paymentStatusMessageSignal.set('Processing your payment…');
+      this.resolveReturn(tenant, session.orderId, 'success');
+      return;
+    }
+
     if (session.status === 'paid') {
       this.paymentStatusMessageSignal.set('Payment completed successfully.');
-      this.resolveReturn(this.tenant(), session.orderId, 'success');
-    } else if (session.status === 'requires_action') {
-      this.paymentStatusMessageSignal.set('Additional payment authentication is required.');
-    } else {
+      this.resolveReturn(tenant, session.orderId, 'success');
+    } else if (session.status === 'failed') {
       this.paymentStatusMessageSignal.set('Payment could not be completed. Please try another method.');
+    } else {
+      this.paymentStatusMessageSignal.set('Payment status is being verified.');
+      this.resolveReturn(tenant, session.orderId, null);
     }
   }
 
   private resolveReturn(tenant: string, orderId: string, status: string | null): void {
     this.paymentStatusMessageSignal.set('Confirming your payment status…');
-    this.checkoutService.getPaymentStatus(tenant, orderId).subscribe({
+    this.paymentFlowService.handleReturn(tenant, orderId).subscribe({
       next: paymentStatus => {
         if (paymentStatus.status === 'paid' || status === 'success') {
           this.paymentStatusMessageSignal.set('Payment confirmed! Here is your order summary.');
