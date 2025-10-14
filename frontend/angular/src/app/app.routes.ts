@@ -18,6 +18,10 @@ export const appRoutes: Routes = [
     loadChildren: () => import('./tenant-admin/tenant-admin.module').then(m => m.TenantAdminModule)
   },
   {
+    path: 'store',
+    loadChildren: () => import('./tenant-store/tenant-store.routes').then(m => m.TENANT_STORE_ROUTES)
+  },
+  {
     path: '',
     pathMatch: 'full',
     redirectTo: 'login'
