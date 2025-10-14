@@ -60,10 +60,13 @@ public static class DependencyInjection
         services.AddScoped<ISubscriptionPlanService, SubscriptionPlanService>();
         services.AddScoped<ISubscriptionService, SubscriptionService>();
         services.AddScoped<IPluginManagementService, PluginManagementService>();
+        services.AddScoped<IPluginManagerService, PluginManagerService>();
         services.AddScoped<ICronJobService, CronJobService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductCatalogService, ProductCatalogService>();
+        services.AddScoped<IPointOfSaleService, PointOfSaleService>();
+        services.AddScoped<IWooCommerceImportService, WooCommerceImportService>();
         services.AddScoped<ICheckoutService, CheckoutService>();
         services.AddScoped<IShippingService, ShippingService>();
         services.AddScoped<ITaxService, TaxService>();
