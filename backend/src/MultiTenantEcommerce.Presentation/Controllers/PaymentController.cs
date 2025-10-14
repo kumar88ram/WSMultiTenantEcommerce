@@ -33,6 +33,29 @@ public class PaymentController : ControllerBase
         _logger = logger;
     }
 
+    [HttpPost("stripe/tokenize")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(StripeTokenizationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<StripeTokenizationResponse> TokenizeStripe([FromBody] StripeTokenizationRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.CardNumber) || request.CardNumber.Length < 12)
+        {
+            return BadRequest("A valid card number must be provided.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Cvc) || request.Cvc.Length < 3)
+        {
+            return BadRequest("A valid CVC must be provided.");
+        }
+
+        var token = $"tok_{Guid.NewGuid():N}";
+        var brand = DetectCardBrand(request.CardNumber);
+        var last4 = request.CardNumber[^4..];
+
+        return Ok(new StripeTokenizationResponse(token, DateTime.UtcNow, brand, last4));
+    }
+
     [HttpPost("initiate")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(CheckoutResponse), StatusCodes.Status200OK)]
@@ -175,4 +198,33 @@ public class PaymentController : ControllerBase
 
         return null;
     }
+
+    private static string DetectCardBrand(string cardNumber)
+    {
+        if (cardNumber.StartsWith("4", StringComparison.Ordinal))
+        {
+            return "visa";
+        }
+
+        if (cardNumber.StartsWith("5", StringComparison.Ordinal))
+        {
+            return "mastercard";
+        }
+
+        if (cardNumber.StartsWith("34", StringComparison.Ordinal) || cardNumber.StartsWith("37", StringComparison.Ordinal))
+        {
+            return "amex";
+        }
+
+        if (cardNumber.StartsWith("6", StringComparison.Ordinal))
+        {
+            return "discover";
+        }
+
+        return "card";
+    }
 }
+
+public record StripeTokenizationRequest(string CardNumber, string ExpiryMonth, string ExpiryYear, string Cvc, string? CardholderName);
+
+public record StripeTokenizationResponse(string Token, DateTime CreatedAt, string Brand, string Last4);

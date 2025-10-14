@@ -64,6 +64,8 @@ public static class DependencyInjection
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductCatalogService, ProductCatalogService>();
         services.AddScoped<ICheckoutService, CheckoutService>();
+        services.AddScoped<IPromotionEngine, PromotionEngine>();
+        services.AddScoped<IPromotionAdminService, PromotionAdminService>();
         services.AddSingleton<IEmailNotificationQueue, EmailNotificationQueue>();
         services.AddSingleton<IEmailNotificationSender, LoggingEmailNotificationSender>();
         services.Configure<PaymentGatewayOptions>(configuration.GetSection("Payments"));

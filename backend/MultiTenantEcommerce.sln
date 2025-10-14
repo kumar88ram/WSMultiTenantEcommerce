@@ -4,6 +4,8 @@ VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6F60B249-5A96-4F7C-949F-17F2C87BC034}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{3B0336C7-3317-48F0-967D-72C1D4E160FA}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantEcommerce.Domain", "src/MultiTenantEcommerce.Domain/MultiTenantEcommerce.Domain.csproj", "{A4EAA358-2B32-4D54-83E4-76A0C6285CF1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantEcommerce.Application", "src/MultiTenantEcommerce.Application/MultiTenantEcommerce.Application.csproj", "{5AEF8685-504F-4C55-B23D-5F772316A36E}"
@@ -13,6 +15,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantEcommerce.Auth", "src/MultiTenantEcommerce.Auth/MultiTenantEcommerce.Auth.csproj", "{92FBF75C-94D2-4F44-A5E9-ECD7B8A691E8}"
 EndProject
 Project("{349C5851-65DF-11DA-9384-00065B846F21}") = "MultiTenantEcommerce.Presentation", "src/MultiTenantEcommerce.Presentation/MultiTenantEcommerce.Presentation.csproj", "{4E2C5AA9-DF62-4241-959D-5E22528DE09D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantEcommerce.Application.Tests", "tests/MultiTenantEcommerce.Application.Tests/MultiTenantEcommerce.Application.Tests.csproj", "{9BE83AD1-A00A-4366-858D-DE83210ADFBC}"
 EndProject
 Global
     GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,6 +44,10 @@ Global
         {4E2C5AA9-DF62-4241-959D-5E22528DE09D}.Debug|Any CPU.Build.0 = Debug|Any CPU
         {4E2C5AA9-DF62-4241-959D-5E22528DE09D}.Release|Any CPU.ActiveCfg = Release|Any CPU
         {4E2C5AA9-DF62-4241-959D-5E22528DE09D}.Release|Any CPU.Build.0 = Release|Any CPU
+        {9BE83AD1-A00A-4366-858D-DE83210ADFBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {9BE83AD1-A00A-4366-858D-DE83210ADFBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {9BE83AD1-A00A-4366-858D-DE83210ADFBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {9BE83AD1-A00A-4366-858D-DE83210ADFBC}.Release|Any CPU.Build.0 = Release|Any CPU
     EndGlobalSection
     GlobalSection(SolutionProperties) = preSolution
         HideSolutionNode = FALSE
@@ -50,5 +58,6 @@ Global
         {4B0D238D-7DA6-4CB4-9F54-9F652B5D21BF} = {6F60B249-5A96-4F7C-949F-17F2C87BC034}
         {92FBF75C-94D2-4F44-A5E9-ECD7B8A691E8} = {6F60B249-5A96-4F7C-949F-17F2C87BC034}
         {4E2C5AA9-DF62-4241-959D-5E22528DE09D} = {6F60B249-5A96-4F7C-949F-17F2C87BC034}
+        {9BE83AD1-A00A-4366-858D-DE83210ADFBC} = {3B0336C7-3317-48F0-967D-72C1D4E160FA}
     EndGlobalSection
 EndGlobal

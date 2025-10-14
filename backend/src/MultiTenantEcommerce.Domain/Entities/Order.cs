@@ -17,7 +17,11 @@ public class Order : BaseEntity
     public string Email { get; set; } = string.Empty;
     public string ShippingAddress { get; set; } = string.Empty;
     public string BillingAddress { get; set; } = string.Empty;
+    public Guid? CouponId { get; set; }
+    public Coupon? Coupon { get; set; }
     public string? CouponCode { get; set; }
+    public Guid? PromotionCampaignId { get; set; }
+    public PromotionCampaign? PromotionCampaign { get; set; }
     public DateTime? PaidAt { get; set; }
     public DateTime? ShippedAt { get; set; }
     public DateTime? DeliveredAt { get; set; }
