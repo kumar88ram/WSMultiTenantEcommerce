@@ -43,6 +43,13 @@ public class ApplicationDbContext : DbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
+    public DbSet<ShippingZone> ShippingZones => Set<ShippingZone>();
+    public DbSet<ShippingZoneRegion> ShippingZoneRegions => Set<ShippingZoneRegion>();
+    public DbSet<ShippingMethod> ShippingMethods => Set<ShippingMethod>();
+    public DbSet<ShippingRateTableEntry> ShippingRateTableEntries => Set<ShippingRateTableEntry>();
+    public DbSet<TaxRule> TaxRules => Set<TaxRule>();
+    public DbSet<RefundRequest> RefundRequests => Set<RefundRequest>();
+    public DbSet<RefundRequestItem> RefundRequestItems => Set<RefundRequestItem>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<PromotionCampaign> PromotionCampaigns => Set<PromotionCampaign>();
 
@@ -86,6 +93,13 @@ public class ApplicationDbContext : DbContext
             modelBuilder.Entity<PaymentTransaction>().HasQueryFilter(pt => pt.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<Coupon>().HasQueryFilter(c => c.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<PromotionCampaign>().HasQueryFilter(pc => pc.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<ShippingZone>().HasQueryFilter(sz => sz.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<ShippingZoneRegion>().HasQueryFilter(szr => szr.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<ShippingMethod>().HasQueryFilter(sm => sm.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<ShippingRateTableEntry>().HasQueryFilter(sr => sr.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<TaxRule>().HasQueryFilter(tr => tr.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<RefundRequest>().HasQueryFilter(rr => rr.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<RefundRequestItem>().HasQueryFilter(rri => rri.TenantId == _tenantResolver.CurrentTenantId);
         }
     }
 }

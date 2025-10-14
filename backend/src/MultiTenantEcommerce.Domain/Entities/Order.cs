@@ -28,4 +28,5 @@ public class Order : BaseEntity
 
     public ICollection<OrderItem> Items { get; set; } = new Collection<OrderItem>();
     public ICollection<PaymentTransaction> Payments { get; set; } = new Collection<PaymentTransaction>();
+    public ICollection<RefundRequest> RefundRequests { get; set; } = new Collection<RefundRequest>();
 }

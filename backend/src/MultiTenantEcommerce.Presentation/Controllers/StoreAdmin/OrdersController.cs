@@ -12,10 +12,12 @@ namespace MultiTenantEcommerce.Presentation.Controllers.StoreAdmin;
 public class OrdersController : ControllerBase
 {
     private readonly ICheckoutService _checkoutService;
+    private readonly IRefundService _refundService;
 
-    public OrdersController(ICheckoutService checkoutService)
+    public OrdersController(ICheckoutService checkoutService, IRefundService refundService)
     {
         _checkoutService = checkoutService;
+        _refundService = refundService;
     }
 
     [HttpGet]
@@ -60,11 +62,11 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost("{orderId:guid}/refund")]
-    public async Task<ActionResult<OrderDto>> Refund(Guid orderId, [FromBody] RefundRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<OrderDto>> Refund(Guid orderId, [FromBody] OrderRefundCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            var order = await _checkoutService.RefundOrderAsync(orderId, request, cancellationToken);
+            var order = await _refundService.CreateImmediateRefundAsync(orderId, request, cancellationToken);
             return Ok(order);
         }
         catch (InvalidOperationException ex)

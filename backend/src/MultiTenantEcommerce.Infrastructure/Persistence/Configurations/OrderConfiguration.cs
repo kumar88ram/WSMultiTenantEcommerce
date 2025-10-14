@@ -65,6 +65,11 @@ public class OrderConfiguration :
             .WithOne(p => p.Order)
             .HasForeignKey(p => p.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(o => o.RefundRequests)
+            .WithOne(r => r.Order)
+            .HasForeignKey(r => r.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     public void Configure(EntityTypeBuilder<OrderItem> builder)

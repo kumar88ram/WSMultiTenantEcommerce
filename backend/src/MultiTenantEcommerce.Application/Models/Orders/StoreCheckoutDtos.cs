@@ -1,8 +1,11 @@
+using MultiTenantEcommerce.Domain.Entities;
+
 namespace MultiTenantEcommerce.Application.Models.Orders;
 
 public record CheckoutShippingMethodDto(
     string Id,
     string Name,
+    ShippingMethodType MethodType,
     decimal Amount,
     string Currency,
     string? Description,

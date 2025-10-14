@@ -19,15 +19,23 @@ public class LoggingEmailNotificationSender : IEmailNotificationSender
         {
             OrderEmailNotificationType.OrderPlaced => $"Order {notification.OrderNumber} confirmed",
             OrderEmailNotificationType.OrderShipped => $"Your order {notification.OrderNumber} has shipped",
+            OrderEmailNotificationType.RefundRequested => $"Refund request received for order {notification.OrderNumber}",
+            OrderEmailNotificationType.RefundApproved => $"Refund approved for order {notification.OrderNumber}",
+            OrderEmailNotificationType.RefundDenied => $"Refund denied for order {notification.OrderNumber}",
+            OrderEmailNotificationType.RefundProcessed => $"Refund processed for order {notification.OrderNumber}",
+            OrderEmailNotificationType.RefundFailed => $"Refund failed for order {notification.OrderNumber}",
             _ => $"Update for order {notification.OrderNumber}"
         };
 
+        var amount = notification.Amount ?? notification.GrandTotal;
+
         _logger.LogInformation(
-            "Sending email to {Email}: {Subject} (Total: {Amount} {Currency})",
+            "Sending email to {Email}: {Subject} (Amount: {Amount} {Currency}) {Message}",
             notification.Email,
             subject,
-            notification.GrandTotal,
-            notification.Currency);
+            amount,
+            notification.Currency,
+            notification.Message ?? string.Empty);
 
         return Task.CompletedTask;
     }

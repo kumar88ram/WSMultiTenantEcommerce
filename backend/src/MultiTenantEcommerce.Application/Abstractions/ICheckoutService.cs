@@ -15,5 +15,4 @@ public interface ICheckoutService
     Task<OrderListResult> GetOrdersAsync(OrderListQuery query, CancellationToken cancellationToken = default);
     Task<OrderDto?> GetOrderByIdAsync(Guid orderId, CancellationToken cancellationToken = default);
     Task<OrderDto> UpdateOrderStatusAsync(Guid orderId, OrderStatus status, string? trackingNumber, CancellationToken cancellationToken = default);
-    Task<OrderDto> RefundOrderAsync(Guid orderId, RefundRequest request, CancellationToken cancellationToken = default);
 }
