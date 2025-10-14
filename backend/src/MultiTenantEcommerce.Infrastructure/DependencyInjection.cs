@@ -11,6 +11,7 @@ using MultiTenantEcommerce.Infrastructure.Persistence;
 using MultiTenantEcommerce.Infrastructure.Persistence.Repositories;
 using MultiTenantEcommerce.Infrastructure.Security;
 using MultiTenantEcommerce.Infrastructure.Shipping;
+using MultiTenantEcommerce.Infrastructure.Storage;
 
 namespace MultiTenantEcommerce.Infrastructure;
 
@@ -76,6 +77,7 @@ public static class DependencyInjection
         services.AddScoped<IProductReviewService, ProductReviewService>();
         services.AddScoped<IPromotionEngine, PromotionEngine>();
         services.AddScoped<IPromotionAdminService, PromotionAdminService>();
+        services.AddScoped<IMediaService, MediaService>();
         services.AddSingleton<IEmailNotificationQueue, EmailNotificationQueue>();
         services.AddSingleton<IEmailNotificationSender, LoggingEmailNotificationSender>();
         services.AddSingleton<ITenantBackupService, LoggingTenantBackupService>();
@@ -86,6 +88,12 @@ public static class DependencyInjection
         services.AddSingleton<IPaymentGateway, PayPalPaymentGateway>();
         services.AddSingleton<IPaymentGateway, RazorpayPaymentGateway>();
         services.AddScoped<IPaymentGatewayOrchestrator, PaymentGatewayOrchestrator>();
+        services.Configure<FileStorageOptions>(configuration.GetSection("Storage"));
+        services.Configure<LocalFileStorageOptions>(configuration.GetSection("Storage:Local"));
+        services.Configure<S3FileStorageOptions>(configuration.GetSection("Storage:S3"));
+        services.AddSingleton<IFileStorageAdapter, LocalFileStorageAdapter>();
+        services.AddSingleton<IFileStorageAdapter, S3FileStorageAdapter>();
+        services.AddSingleton<IFileStorageAdapterResolver, FileStorageAdapterResolver>();
         services.AddHostedService<EmailNotificationWorker>();
         services.AddHostedService<DailyAnalyticsAggregationWorker>();
         services.AddHostedService<TenantBackgroundJobHostedService>();
