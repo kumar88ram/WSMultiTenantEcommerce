@@ -50,22 +50,4 @@ public class CheckoutController : ControllerBase
         }
     }
 
-    [HttpPost]
-    [AllowAnonymous]
-    public async Task<ActionResult<CheckoutResponse>> Checkout([FromBody] CheckoutRequest request, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var response = await _checkoutService.CheckoutAsync(request, cancellationToken);
-            return Ok(response);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
 }

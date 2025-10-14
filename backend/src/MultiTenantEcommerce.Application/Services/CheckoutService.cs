@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MultiTenantEcommerce.Application.Abstractions;
 using MultiTenantEcommerce.Application.Models.Orders;
+using MultiTenantEcommerce.Application.Models.Payments;
 using MultiTenantEcommerce.Domain.Entities;
 using MultiTenantEcommerce.Infrastructure.Persistence;
 
@@ -15,20 +16,20 @@ public class CheckoutService : ICheckoutService
 
     private readonly ApplicationDbContext _dbContext;
     private readonly ITenantResolver _tenantResolver;
-    private readonly IPaymentGatewayClient _paymentGatewayClient;
+    private readonly IPaymentGatewayOrchestrator _paymentGatewayOrchestrator;
     private readonly IEmailNotificationQueue _emailQueue;
     private readonly ILogger<CheckoutService> _logger;
 
     public CheckoutService(
         ApplicationDbContext dbContext,
         ITenantResolver tenantResolver,
-        IPaymentGatewayClient paymentGatewayClient,
+        IPaymentGatewayOrchestrator paymentGatewayOrchestrator,
         IEmailNotificationQueue emailQueue,
         ILogger<CheckoutService> logger)
     {
         _dbContext = dbContext;
         _tenantResolver = tenantResolver;
-        _paymentGatewayClient = paymentGatewayClient;
+        _paymentGatewayOrchestrator = paymentGatewayOrchestrator;
         _emailQueue = emailQueue;
         _logger = logger;
     }
@@ -256,7 +257,13 @@ public class CheckoutService : ICheckoutService
         await _dbContext.Orders.AddAsync(order, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        var paymentIntent = await _paymentGatewayClient.CreatePaymentIntentAsync(order, cancellationToken);
+        var paymentIntent = await _paymentGatewayOrchestrator.PayAsync(request.PaymentProvider, order, cancellationToken);
+
+        if (paymentIntent.Metadata.TryGetValue("providerReference", out var providerReference)
+            && !string.IsNullOrWhiteSpace(providerReference))
+        {
+            payment.ProviderReference = providerReference;
+        }
 
         await _emailQueue.QueueAsync(new OrderEmailNotification(
             OrderEmailNotificationType.OrderPlaced,
@@ -416,15 +423,45 @@ public class CheckoutService : ICheckoutService
             .FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken)
             ?? throw new InvalidOperationException("Order not found");
 
+        var capturedPayment = order.Payments
+            .OrderByDescending(p => p.ProcessedAt)
+            .FirstOrDefault(p => p.Status is PaymentStatus.Captured or PaymentStatus.Authorized);
+
+        PaymentStatus refundStatus = PaymentStatus.Refunded;
+        if (capturedPayment is not null && !string.IsNullOrWhiteSpace(capturedPayment.Provider))
+        {
+            var refundRequestModel = new PaymentRefundRequest(
+                capturedPayment.ProviderReference,
+                request.Amount,
+                order.Currency,
+                request.Reason);
+
+            try
+            {
+                refundStatus = await _paymentGatewayOrchestrator.RefundAsync(
+                    capturedPayment.Provider,
+                    refundRequestModel,
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Failed to execute refund via provider {Provider} for transaction {Reference}",
+                    capturedPayment.Provider,
+                    capturedPayment.ProviderReference);
+            }
+        }
+
         var refund = new PaymentTransaction
         {
             TenantId = order.TenantId,
             Order = order,
-            Provider = order.Payments.FirstOrDefault()?.Provider ?? "manual",
+            Provider = capturedPayment?.Provider ?? "manual",
             ProviderReference = $"refund_{Guid.NewGuid():N}",
             Amount = -Math.Abs(request.Amount),
             Currency = order.Currency,
-            Status = PaymentStatus.Refunded,
+            Status = refundStatus,
             RawPayload = request.Reason
         };
 
