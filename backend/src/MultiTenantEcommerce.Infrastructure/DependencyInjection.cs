@@ -78,6 +78,8 @@ public static class DependencyInjection
         services.AddScoped<IPromotionAdminService, PromotionAdminService>();
         services.AddSingleton<IEmailNotificationQueue, EmailNotificationQueue>();
         services.AddSingleton<IEmailNotificationSender, LoggingEmailNotificationSender>();
+        services.AddSingleton<ITenantBackupService, LoggingTenantBackupService>();
+        services.AddSingleton<ITenantBackgroundJobCoordinator, TenantBackgroundJobCoordinator>();
         services.AddSingleton<IShippingCarrierAdapter, NullShippingCarrierAdapter>();
         services.Configure<PaymentGatewayOptions>(configuration.GetSection("Payments"));
         services.AddSingleton<IPaymentGateway, StripePaymentGateway>();
@@ -86,6 +88,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentGatewayOrchestrator, PaymentGatewayOrchestrator>();
         services.AddHostedService<EmailNotificationWorker>();
         services.AddHostedService<DailyAnalyticsAggregationWorker>();
+        services.AddHostedService<TenantBackgroundJobHostedService>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenFactory, JwtTokenFactory>();
