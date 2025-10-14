@@ -10,6 +10,7 @@ using MultiTenantEcommerce.Infrastructure.Payments;
 using MultiTenantEcommerce.Infrastructure.Persistence;
 using MultiTenantEcommerce.Infrastructure.Persistence.Repositories;
 using MultiTenantEcommerce.Infrastructure.Security;
+using MultiTenantEcommerce.Infrastructure.Shipping;
 
 namespace MultiTenantEcommerce.Infrastructure;
 
@@ -64,10 +65,14 @@ public static class DependencyInjection
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductCatalogService, ProductCatalogService>();
         services.AddScoped<ICheckoutService, CheckoutService>();
+        services.AddScoped<IShippingService, ShippingService>();
+        services.AddScoped<ITaxService, TaxService>();
+        services.AddScoped<IRefundService, RefundService>();
         services.AddScoped<IPromotionEngine, PromotionEngine>();
         services.AddScoped<IPromotionAdminService, PromotionAdminService>();
         services.AddSingleton<IEmailNotificationQueue, EmailNotificationQueue>();
         services.AddSingleton<IEmailNotificationSender, LoggingEmailNotificationSender>();
+        services.AddSingleton<IShippingCarrierAdapter, NullShippingCarrierAdapter>();
         services.Configure<PaymentGatewayOptions>(configuration.GetSection("Payments"));
         services.AddSingleton<IPaymentGateway, StripePaymentGateway>();
         services.AddSingleton<IPaymentGateway, PayPalPaymentGateway>();

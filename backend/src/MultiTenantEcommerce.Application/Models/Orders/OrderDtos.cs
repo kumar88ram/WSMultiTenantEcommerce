@@ -35,16 +35,13 @@ public record CheckoutRequest(
     Guid? CartId,
     Guid? UserId,
     string? GuestToken,
-    string Email,
-    string ShippingAddress,
-    string BillingAddress,
+    CheckoutShippingAddressDto ShippingAddress,
     string Currency,
     string? CouponCode,
     string PaymentProvider,
     IReadOnlyDictionary<string, string>? PaymentMetadata,
-    decimal? ShippingAmount = null,
-    string? ShippingMethodId = null,
-    string? PaymentMethodId = null);
+    string ShippingMethodId,
+    string PaymentMethodId);
 
 public record CheckoutResponse(OrderDto Order, PaymentIntentDto PaymentIntent);
 
@@ -119,12 +116,17 @@ public record OrderSummaryDto(
 
 public record UpdateOrderStatusRequest(OrderStatus Status);
 
-public record RefundRequest(decimal Amount, string Reason);
+public record OrderRefundCommand(decimal Amount, string Reason);
 
 public enum OrderEmailNotificationType
 {
     OrderPlaced,
-    OrderShipped
+    OrderShipped,
+    RefundRequested,
+    RefundApproved,
+    RefundDenied,
+    RefundProcessed,
+    RefundFailed
 }
 
 public record OrderEmailNotification(
@@ -135,4 +137,6 @@ public record OrderEmailNotification(
     decimal GrandTotal,
     string Currency,
     DateTime CreatedAt,
-    string? TrackingNumber);
+    string? TrackingNumber,
+    decimal? Amount = null,
+    string? Message = null);

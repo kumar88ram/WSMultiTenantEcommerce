@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -12,15 +13,14 @@ namespace MultiTenantEcommerce.Application.Services;
 
 public class CheckoutService : ICheckoutService
 {
-    private const decimal DefaultShippingCost = 9.99m;
-    private const decimal DefaultTaxRate = 0.08m;
-
     private readonly ApplicationDbContext _dbContext;
     private readonly ITenantResolver _tenantResolver;
     private readonly IPaymentGatewayOrchestrator _paymentGatewayOrchestrator;
     private readonly IEmailNotificationQueue _emailQueue;
     private readonly ILogger<CheckoutService> _logger;
     private readonly IPromotionEngine _promotionEngine;
+    private readonly IShippingService _shippingService;
+    private readonly ITaxService _taxService;
 
     public CheckoutService(
         ApplicationDbContext dbContext,
@@ -28,6 +28,8 @@ public class CheckoutService : ICheckoutService
         IPaymentGatewayOrchestrator paymentGatewayOrchestrator,
         IEmailNotificationQueue emailQueue,
         IPromotionEngine promotionEngine,
+        IShippingService shippingService,
+        ITaxService taxService,
         ILogger<CheckoutService> logger)
     {
         _dbContext = dbContext;
@@ -35,6 +37,8 @@ public class CheckoutService : ICheckoutService
         _paymentGatewayOrchestrator = paymentGatewayOrchestrator;
         _emailQueue = emailQueue;
         _promotionEngine = promotionEngine;
+        _shippingService = shippingService;
+        _taxService = taxService;
         _logger = logger;
     }
 
@@ -150,27 +154,23 @@ public class CheckoutService : ICheckoutService
 
     public async Task<CheckoutConfigurationDto> GetCheckoutConfigurationAsync(CancellationToken cancellationToken = default)
     {
-        var currency = await ResolveStoreCurrencyAsync(cancellationToken) ?? "USD";
-
-        var shippingMethods = new List<CheckoutShippingMethodDto>
+        var shippingMethods = await _shippingService.GetCheckoutMethodsAsync(null, cancellationToken);
+        if (shippingMethods.Count == 0)
         {
-            new(
-                "standard",
-                "Standard shipping",
-                9.99m,
-                currency,
-                "Delivered within 4-6 business days",
-                4,
-                6),
-            new(
-                "express",
-                "Express shipping",
-                19.99m,
-                currency,
-                "Delivered within 1-2 business days",
-                1,
-                2)
-        };
+            var currency = await ResolveStoreCurrencyAsync(cancellationToken) ?? "USD";
+            shippingMethods = new List<CheckoutShippingMethodDto>
+            {
+                new(
+                    Guid.Empty.ToString(),
+                    "Standard shipping",
+                    ShippingMethodType.FlatRate,
+                    0m,
+                    currency,
+                    "Shipping will be calculated during checkout",
+                    null,
+                    null)
+            };
+        }
 
         var paymentMethods = new List<CheckoutPaymentMethodDto>
         {
@@ -199,8 +199,30 @@ public class CheckoutService : ICheckoutService
     public async Task<CheckoutSessionDto> CreateCheckoutSessionAsync(CreateCheckoutSessionRequestDto request, CancellationToken cancellationToken = default)
     {
         var configuration = await GetCheckoutConfigurationAsync(cancellationToken);
-        var shippingMethod = configuration.ShippingMethods.FirstOrDefault(m => string.Equals(m.Id, request.ShippingMethodId, StringComparison.OrdinalIgnoreCase))
-                            ?? throw new InvalidOperationException("The selected shipping method is not available.");
+        var shippingMethods = await _shippingService.GetCheckoutMethodsAsync(request.ShippingAddress, cancellationToken);
+        var shippingMethod = shippingMethods.FirstOrDefault(m => string.Equals(m.Id, request.ShippingMethodId, StringComparison.OrdinalIgnoreCase));
+
+        if (shippingMethod is null && Guid.TryParse(request.ShippingMethodId, out var methodId) && methodId != Guid.Empty)
+        {
+            var methodDetail = await _shippingService.GetMethodByIdAsync(methodId, cancellationToken)
+                              ?? throw new InvalidOperationException("The selected shipping method is not available.");
+
+            shippingMethod = new CheckoutShippingMethodDto(
+                methodDetail.Id.ToString(),
+                methodDetail.Name,
+                methodDetail.MethodType,
+                methodDetail.FlatRate ?? 0m,
+                methodDetail.Currency,
+                methodDetail.Description,
+                methodDetail.EstimatedTransitMinDays,
+                methodDetail.EstimatedTransitMaxDays);
+        }
+
+        if (shippingMethod is null)
+        {
+            throw new InvalidOperationException("The selected shipping method is not available.");
+        }
+
         var paymentMethod = configuration.PaymentMethods.FirstOrDefault(m => string.Equals(m.Id, request.PaymentMethodId, StringComparison.OrdinalIgnoreCase))
                             ?? throw new InvalidOperationException("The selected payment method is not available.");
 
@@ -221,21 +243,15 @@ public class CheckoutService : ICheckoutService
             }
         }
 
-        var shippingAddress = request.ShippingAddress;
-        var formattedAddress = FormatAddress(shippingAddress);
-
         var checkoutRequest = new CheckoutRequest(
             request.CartId,
             request.UserId,
             request.GuestToken,
-            shippingAddress.Email,
-            formattedAddress,
-            formattedAddress,
+            request.ShippingAddress,
             shippingMethod.Currency,
             request.CouponCode,
             paymentMethod.Provider,
             metadata,
-            shippingMethod.Amount,
             shippingMethod.Id,
             paymentMethod.Id);
 
@@ -361,8 +377,21 @@ public class CheckoutService : ICheckoutService
         var promotionResult = await _promotionEngine.EvaluateAsync(promotionContext, cancellationToken);
         var discount = promotionResult.DiscountAmount;
         var taxableAmount = subtotal - discount;
-        var tax = Math.Round(taxableAmount * DefaultTaxRate, 2, MidpointRounding.AwayFromZero);
-        var shipping = request.ShippingAmount ?? DefaultShippingCost;
+
+        var formattedAddress = FormatAddress(request.ShippingAddress);
+        ShippingQuoteDto shippingQuote;
+        if (Guid.TryParse(request.ShippingMethodId, out var shippingMethodId) && shippingMethodId != Guid.Empty)
+        {
+            shippingQuote = await _shippingService.QuoteAsync(shippingMethodId, request.ShippingAddress, cart.Items, cancellationToken);
+        }
+        else
+        {
+            shippingQuote = new ShippingQuoteDto(Guid.Empty, "Standard shipping", 0m, request.Currency, null, null, null);
+        }
+
+        var taxResult = await _taxService.CalculateAsync(taxableAmount, shippingQuote.Amount, request.ShippingAddress, cancellationToken);
+        var shipping = shippingQuote.Amount;
+        var tax = taxResult.Amount;
         var grandTotal = taxableAmount + tax + shipping;
 
         var order = new Order
@@ -378,9 +407,9 @@ public class CheckoutService : ICheckoutService
             ShippingTotal = shipping,
             GrandTotal = grandTotal,
             Currency = request.Currency,
-            Email = request.Email,
-            ShippingAddress = request.ShippingAddress,
-            BillingAddress = request.BillingAddress,
+            Email = request.ShippingAddress.Email,
+            ShippingAddress = formattedAddress,
+            BillingAddress = formattedAddress,
             CouponId = promotionResult.CouponId,
             CouponCode = promotionResult.CouponCode ?? request.CouponCode,
             PromotionCampaignId = promotionResult.PromotionCampaignId,
@@ -447,6 +476,8 @@ public class CheckoutService : ICheckoutService
             order.GrandTotal,
             order.Currency,
             order.CreatedAt,
+            null,
+            order.GrandTotal,
             null),
             cancellationToken);
 
@@ -568,7 +599,9 @@ public class CheckoutService : ICheckoutService
                 order.GrandTotal,
                 order.Currency,
                 order.CreatedAt,
-                trackingNumber),
+                trackingNumber,
+                order.GrandTotal,
+                null),
                 cancellationToken);
         }
         else if (status == OrderStatus.Delivered)
@@ -580,70 +613,6 @@ public class CheckoutService : ICheckoutService
             await ReleaseInventoryAsync(order, cancellationToken);
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return MapOrder(order);
-    }
-
-    public async Task<OrderDto> RefundOrderAsync(Guid orderId, RefundRequest request, CancellationToken cancellationToken = default)
-    {
-        if (request.Amount <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(request.Amount));
-        }
-
-        var order = await _dbContext.Orders
-            .Include(o => o.Items)
-            .Include(o => o.Payments)
-            .FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken)
-            ?? throw new InvalidOperationException("Order not found");
-
-        var capturedPayment = order.Payments
-            .OrderByDescending(p => p.ProcessedAt)
-            .FirstOrDefault(p => p.Status is PaymentStatus.Captured or PaymentStatus.Authorized);
-
-        PaymentStatus refundStatus = PaymentStatus.Refunded;
-        if (capturedPayment is not null && !string.IsNullOrWhiteSpace(capturedPayment.Provider))
-        {
-            var refundRequestModel = new PaymentRefundRequest(
-                capturedPayment.ProviderReference,
-                request.Amount,
-                order.Currency,
-                request.Reason);
-
-            try
-            {
-                refundStatus = await _paymentGatewayOrchestrator.RefundAsync(
-                    capturedPayment.Provider,
-                    refundRequestModel,
-                    cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(
-                    ex,
-                    "Failed to execute refund via provider {Provider} for transaction {Reference}",
-                    capturedPayment.Provider,
-                    capturedPayment.ProviderReference);
-            }
-        }
-
-        var refund = new PaymentTransaction
-        {
-            TenantId = order.TenantId,
-            Order = order,
-            Provider = capturedPayment?.Provider ?? "manual",
-            ProviderReference = $"refund_{Guid.NewGuid():N}",
-            Amount = -Math.Abs(request.Amount),
-            Currency = order.Currency,
-            Status = refundStatus,
-            RawPayload = request.Reason
-        };
-
-        order.Payments.Add(refund);
-        order.Status = OrderStatus.Refunded;
-        order.UpdatedAt = DateTime.UtcNow;
-
-        await ReleaseInventoryAsync(order, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
         return MapOrder(order);
     }
