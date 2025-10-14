@@ -10,4 +10,8 @@ public class Tenant
     public Guid PlanId { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? DefaultMetaTitle { get; set; }
+    public string? DefaultMetaDescription { get; set; }
+    public string? DefaultMetaKeywords { get; set; }
+    public string? DefaultOgImageUrl { get; set; }
 }

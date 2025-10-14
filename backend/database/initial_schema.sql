@@ -9,6 +9,41 @@ CREATE TABLE Tenants (
     UpdatedAt DATETIME2 NULL
 );
 
+ALTER TABLE Tenants ADD DefaultMetaTitle NVARCHAR(256) NULL;
+ALTER TABLE Tenants ADD DefaultMetaDescription NVARCHAR(512) NULL;
+ALTER TABLE Tenants ADD DefaultMetaKeywords NVARCHAR(512) NULL;
+ALTER TABLE Tenants ADD DefaultOgImageUrl NVARCHAR(512) NULL;
+
+CREATE TABLE AnalyticsEvents (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    TenantId UNIQUEIDENTIFIER NOT NULL,
+    EventType NVARCHAR(64) NOT NULL,
+    OccurredAt DATETIME2 NOT NULL,
+    Amount DECIMAL(18,2) NULL,
+    RelatedEntityId UNIQUEIDENTIFIER NULL,
+    Metadata NVARCHAR(2048) NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAt DATETIME2 NULL
+);
+
+CREATE INDEX IX_AnalyticsEvents_TenantId_OccurredAt ON AnalyticsEvents (TenantId, OccurredAt);
+CREATE INDEX IX_AnalyticsEvents_TenantId_EventType ON AnalyticsEvents (TenantId, EventType, OccurredAt);
+
+CREATE TABLE DailyAnalyticsSummaries (
+    Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    TenantId UNIQUEIDENTIFIER NOT NULL,
+    [Date] DATE NOT NULL,
+    VisitCount INT NOT NULL DEFAULT 0,
+    OrderCount INT NOT NULL DEFAULT 0,
+    SalesAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+    ConversionRate DECIMAL(18,4) NOT NULL DEFAULT 0,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAt DATETIME2 NULL
+);
+
+CREATE UNIQUE INDEX IX_DailyAnalyticsSummaries_TenantId_Date
+    ON DailyAnalyticsSummaries (TenantId, [Date]);
+
 CREATE TABLE Roles (
     Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
     Name NVARCHAR(256) NOT NULL,

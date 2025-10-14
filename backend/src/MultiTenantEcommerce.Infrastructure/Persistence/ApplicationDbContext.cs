@@ -56,6 +56,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<SupportTicketMessage> SupportTicketMessages => Set<SupportTicketMessage>();
     public DbSet<SupportTicketAttachment> SupportTicketAttachments => Set<SupportTicketAttachment>();
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
+    public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
+    public DbSet<DailyAnalyticsSummary> DailyAnalyticsSummaries => Set<DailyAnalyticsSummary>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -108,6 +110,8 @@ public class ApplicationDbContext : DbContext
             modelBuilder.Entity<SupportTicketMessage>().HasQueryFilter(stm => stm.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<SupportTicketAttachment>().HasQueryFilter(sta => sta.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<ProductReview>().HasQueryFilter(pr => pr.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<AnalyticsEvent>().HasQueryFilter(ae => ae.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<DailyAnalyticsSummary>().HasQueryFilter(das => das.TenantId == _tenantResolver.CurrentTenantId);
         }
     }
 }
