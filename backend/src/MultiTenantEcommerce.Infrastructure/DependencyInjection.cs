@@ -107,6 +107,10 @@ public static class DependencyInjection
         services.AddHostedService<DailyAnalyticsAggregationWorker>();
         services.AddHostedService<TenantBackgroundJobHostedService>();
 
+        services.Configure<ThemePreviewOptions>(configuration.GetSection("ThemePreview"));
+        services.AddScoped<IThemePreviewService, ThemePreviewService>();
+        services.AddScoped<IThemeCloneService, ThemeCloneService>();
+        services.AddScoped<IThemeAnalyticsService, ThemeAnalyticsService>();
         services.AddScoped<IThemeService, ThemeService>();
         services.AddScoped<ThemeBuilderService>();
 

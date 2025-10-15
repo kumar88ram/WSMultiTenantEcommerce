@@ -30,6 +30,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<ThemeSection> ThemeSections => Set<ThemeSection>();
     public DbSet<TenantTheme> TenantThemes => Set<TenantTheme>();
     public DbSet<ThemeVariable> ThemeVariables => Set<ThemeVariable>();
+    public DbSet<TenantThemeSection> TenantThemeSections => Set<TenantThemeSection>();
+    public DbSet<ThemeAuditLog> ThemeAuditLogs => Set<ThemeAuditLog>();
+    public DbSet<ThemeUsageAnalytics> ThemeUsageAnalytics => Set<ThemeUsageAnalytics>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductCategory> ProductCategories => Set<ProductCategory>();
@@ -110,6 +113,8 @@ public class ApplicationDbContext : DbContext
             modelBuilder.Entity<Order>().HasQueryFilter(o => o.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<OrderItem>().HasQueryFilter(oi => oi.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<PaymentTransaction>().HasQueryFilter(pt => pt.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<TenantTheme>().HasQueryFilter(tt => tt.TenantId == _tenantResolver.CurrentTenantId);
+            modelBuilder.Entity<TenantThemeSection>().HasQueryFilter(ts => ts.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<Coupon>().HasQueryFilter(c => c.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<PromotionCampaign>().HasQueryFilter(pc => pc.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<ShippingZone>().HasQueryFilter(sz => sz.TenantId == _tenantResolver.CurrentTenantId);

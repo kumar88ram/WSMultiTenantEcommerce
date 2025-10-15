@@ -4,8 +4,13 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   TenantTheme,
+  TenantThemeUsage,
+  ThemeAnalyticsSummary,
+  ThemeCloneRequest,
+  ThemeCloneResponse,
   ThemeSectionsRequest,
   ThemeSummary,
+  ThemePreviewResponse,
   ThemeVariablesRequest
 } from '../models/theme.models';
 
@@ -51,5 +56,27 @@ export class ThemeService {
 
   resetTenantVariables(): Observable<void> {
     return this.http.delete<void>(`${this.tenantBaseUrl}/variables`);
+  }
+
+  getThemePreviewUrl(themeId: string): Observable<ThemePreviewResponse> {
+    return this.http.get<ThemePreviewResponse>(`${this.adminBaseUrl}/${themeId}/preview-url`);
+  }
+
+  exportTheme(themeId: string): Observable<Blob> {
+    return this.http.get(`${this.adminBaseUrl}/${themeId}/export`, {
+      responseType: 'blob'
+    });
+  }
+
+  cloneTheme(payload: ThemeCloneRequest): Observable<ThemeCloneResponse> {
+    return this.http.post<ThemeCloneResponse>(`${this.adminBaseUrl}/clone`, payload);
+  }
+
+  getThemeAnalytics(): Observable<ThemeAnalyticsSummary[]> {
+    return this.http.get<ThemeAnalyticsSummary[]>(`${this.adminBaseUrl}/analytics`);
+  }
+
+  getThemeUsage(themeId: string): Observable<TenantThemeUsage[]> {
+    return this.http.get<TenantThemeUsage[]>(`${this.adminBaseUrl}/${themeId}/usage`);
   }
 }
