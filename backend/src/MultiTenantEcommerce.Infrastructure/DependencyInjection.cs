@@ -15,6 +15,7 @@ using MultiTenantEcommerce.Infrastructure.Persistence.Repositories;
 using MultiTenantEcommerce.Infrastructure.Security;
 using MultiTenantEcommerce.Infrastructure.Shipping;
 using MultiTenantEcommerce.Infrastructure.Storage;
+using MultiTenantEcommerce.Infrastructure.Theming;
 using MultiTenantEcommerce.Infrastructure.Notifications;
 
 namespace MultiTenantEcommerce.Infrastructure;
@@ -105,6 +106,9 @@ public static class DependencyInjection
         services.AddHostedService<EmailNotificationWorker>();
         services.AddHostedService<DailyAnalyticsAggregationWorker>();
         services.AddHostedService<TenantBackgroundJobHostedService>();
+
+        services.AddScoped<IThemeService, ThemeService>();
+        services.AddScoped<ThemeBuilderService>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenFactory, JwtTokenFactory>();
