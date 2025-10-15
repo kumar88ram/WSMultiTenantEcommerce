@@ -40,6 +40,11 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/plugins/plugins.component').then(m => m.PluginsComponent)
       },
       {
+        path: 'themes/analytics',
+        loadComponent: () =>
+          import('./pages/theme-management/theme-analytics.component').then(m => m.ThemeAnalyticsComponent)
+      },
+      {
         path: 'themes',
         loadComponent: () =>
           import('./pages/theme-management/theme-list.component').then(m => m.ThemeListComponent)

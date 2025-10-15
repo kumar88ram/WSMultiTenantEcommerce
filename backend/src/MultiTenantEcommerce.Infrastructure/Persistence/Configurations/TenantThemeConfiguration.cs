@@ -21,5 +21,10 @@ public class TenantThemeConfiguration : IEntityTypeConfiguration<TenantTheme>
             .WithOne(v => v.TenantTheme)
             .HasForeignKey(v => v.TenantThemeId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(tt => tt.Sections)
+            .WithOne()
+            .HasForeignKey(s => s.TenantThemeId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

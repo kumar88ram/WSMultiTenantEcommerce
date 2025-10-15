@@ -32,6 +32,23 @@ public record TenantThemeDto(
 
 public record ThemeVariableDto(string Key, string Value);
 
+public record ThemeUsageSummaryDto(
+    Guid ThemeId,
+    string ThemeName,
+    int ActiveTenantsCount,
+    double AverageActiveDays,
+    IEnumerable<TenantUsageSnapshot> TopTenants);
+
+public record TenantUsageSnapshot(Guid TenantId, double TotalActiveDays, DateTime? ActivatedAt);
+
+public record TenantThemeUsageDto(
+    Guid TenantId,
+    Guid ThemeId,
+    bool IsActive,
+    DateTime ActivatedAt,
+    DateTime? DeactivatedAt,
+    double TotalActiveDays);
+
 public static class ThemeMappings
 {
     public static ThemeSummaryDto ToSummaryDto(this Theme theme)

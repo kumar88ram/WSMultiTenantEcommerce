@@ -91,6 +91,7 @@ public class ThemeService : IThemeService
         if (activeTheme is not null)
         {
             activeTheme.IsActive = false;
+            await FinalizeAnalyticsAsync(activeTheme.ThemeId, tenantId, DateTime.UtcNow, cancellationToken);
             _dbContext.TenantThemes.Update(activeTheme);
         }
 
@@ -115,6 +116,7 @@ public class ThemeService : IThemeService
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await LogActivationAsync(themeId, tenantId, tenantTheme.ActivatedAt, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return tenantTheme;
@@ -132,6 +134,7 @@ public class ThemeService : IThemeService
 
         tenantTheme.IsActive = false;
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await FinalizeAnalyticsAsync(themeId, tenantId, DateTime.UtcNow, cancellationToken);
     }
 
     public async Task<TenantTheme?> GetActiveThemeAsync(Guid tenantId, CancellationToken cancellationToken = default)
@@ -140,6 +143,7 @@ public class ThemeService : IThemeService
             .AsNoTracking()
             .Include(tt => tt.Theme!)
             .Include(tt => tt.Variables)
+            .Include(tt => tt.Sections)
             .Where(tt => tt.TenantId == tenantId && tt.IsActive)
             .OrderByDescending(tt => tt.ActivatedAt)
             .FirstOrDefaultAsync(cancellationToken);
@@ -207,5 +211,43 @@ public class ThemeService : IThemeService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return tenantTheme.Variables.ToList();
+    }
+
+    private async Task LogActivationAsync(Guid themeId, Guid tenantId, DateTime activatedAt, CancellationToken cancellationToken)
+    {
+        var analyticsEntry = new ThemeUsageAnalytics
+        {
+            ThemeId = themeId,
+            TenantId = tenantId,
+            ActivatedAt = activatedAt,
+            IsActive = true,
+            TotalActiveDays = 0
+        };
+
+        await _dbContext.ThemeUsageAnalytics.AddAsync(analyticsEntry, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task FinalizeAnalyticsAsync(Guid themeId, Guid tenantId, DateTime deactivatedAt, CancellationToken cancellationToken)
+    {
+        var entry = await _dbContext.ThemeUsageAnalytics
+            .Where(x => x.ThemeId == themeId && x.TenantId == tenantId && x.IsActive)
+            .OrderByDescending(x => x.ActivatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (entry is null)
+        {
+            return;
+        }
+
+        entry.IsActive = false;
+        entry.DeactivatedAt = deactivatedAt;
+        var duration = (deactivatedAt - entry.ActivatedAt).TotalDays;
+        if (duration > 0)
+        {
+            entry.TotalActiveDays += duration;
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

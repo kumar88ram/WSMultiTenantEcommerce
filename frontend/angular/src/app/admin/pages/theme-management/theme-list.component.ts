@@ -1,5 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
@@ -11,6 +14,7 @@ import { ThemeUploadComponent } from './theme-upload.component';
 import { ThemePreviewComponent } from './theme-preview.component';
 import { ThemeActivationComponent } from './theme-activation.component';
 import { ThemeSectionBuilderComponent } from './theme-section-builder.component';
+import { ThemeCloneDialogComponent } from './theme-clone-dialog.component';
 
 @Component({
   selector: 'app-theme-list',
@@ -22,16 +26,22 @@ import { ThemeSectionBuilderComponent } from './theme-section-builder.component'
     MatListModule,
     MatProgressBarModule,
     MatToolbarModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    RouterModule,
     ThemeUploadComponent,
     ThemePreviewComponent,
     ThemeActivationComponent,
-    ThemeSectionBuilderComponent
+    ThemeSectionBuilderComponent,
+    ThemeCloneDialogComponent
   ],
   template: `
     <section class="theme-manager">
       <mat-toolbar color="primary" class="toolbar">
         <span>Store Themes</span>
         <span class="spacer"></span>
+        <button mat-button routerLink="analytics">Usage Analytics</button>
+        <button mat-stroked-button (click)="openCloneDialog()">Clone Theme</button>
         <app-theme-upload (themeUploaded)="handleThemeUploaded($event)"></app-theme-upload>
       </mat-toolbar>
 
@@ -126,6 +136,8 @@ import { ThemeSectionBuilderComponent } from './theme-section-builder.component'
 })
 export class ThemeListComponent implements OnInit {
   private readonly themeService = inject(ThemeService);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
 
   private readonly themesSignal = signal<ThemeSummary[]>([]);
   private readonly selectedThemeSignal = signal<ThemeSummary | null>(null);
@@ -169,5 +181,18 @@ export class ThemeListComponent implements OnInit {
 
   handleActivation(tenantTheme: TenantTheme): void {
     this.refreshThemes();
+  }
+
+  openCloneDialog(): void {
+    const dialogRef = this.dialog.open(ThemeCloneDialogComponent, {
+      width: '520px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.snackBar.open('Theme cloned successfully', 'Dismiss', { duration: 3000 });
+        this.refreshThemes();
+      }
+    });
   }
 }

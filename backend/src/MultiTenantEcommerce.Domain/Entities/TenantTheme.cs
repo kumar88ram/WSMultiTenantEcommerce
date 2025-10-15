@@ -10,4 +10,5 @@ public class TenantTheme
 
     public Theme? Theme { get; set; }
     public ICollection<ThemeVariable> Variables { get; set; } = new List<ThemeVariable>();
+    public ICollection<TenantThemeSection> Sections { get; set; } = new List<TenantThemeSection>();
 }

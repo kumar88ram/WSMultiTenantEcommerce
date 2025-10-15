@@ -80,6 +80,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<ThemePreviewMiddleware>();
 app.UseHttpsRedirection();
 app.UseMultiTenancy();
 app.UseMiddleware<ThemeResolverMiddleware>();
