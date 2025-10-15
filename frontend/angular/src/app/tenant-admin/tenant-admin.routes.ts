@@ -38,6 +38,11 @@ export const TENANT_ADMIN_ROUTES: Routes = [
         path: 'settings',
         loadComponent: () =>
           import('./pages/settings/settings.component').then(m => m.SettingsComponent)
+      },
+      {
+        path: 'theme/customize',
+        loadComponent: () =>
+          import('./pages/theme-customizer/theme-customizer.component').then(m => m.ThemeCustomizerComponent)
       }
     ]
   }

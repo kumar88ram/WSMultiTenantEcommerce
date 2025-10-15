@@ -165,6 +165,20 @@ public class ApiService
         return notifications ?? Array.Empty<NotificationMessage>();
     }
 
+    public async Task<TenantTheme> GetTenantThemeAsync(CancellationToken cancellationToken = default)
+    {
+        if (UseMockData)
+        {
+            await Task.Delay(150, cancellationToken);
+            return MockData.ActiveTenantTheme;
+        }
+
+        using var response = await GetAsync("/tenant/theme", cancellationToken: cancellationToken);
+        await EnsureSuccessAsync(response, "Unable to load tenant theme");
+        return await DeserializeAsync<TenantTheme>(response, cancellationToken)
+               ?? MockData.ActiveTenantTheme;
+    }
+
     public async Task<IReadOnlyList<ShippingOption>> GetShippingOptionsAsync(CancellationToken cancellationToken = default)
     {
         if (UseMockData)
@@ -468,5 +482,33 @@ public class ApiService
             new() { Id = "standard", Name = "Standard Shipping", Price = 0m, EstimatedDuration = TimeSpan.FromDays(5) },
             new() { Id = "express", Name = "Express Shipping", Price = 12.50m, EstimatedDuration = TimeSpan.FromDays(2) }
         };
+
+        public static readonly TenantTheme ActiveTenantTheme = new(
+            TenantThemeId: "tenant-theme-001",
+            TenantId: "tenant-001",
+            Theme: new ThemeSummary(
+                Id: "classic-storefront",
+                Name: "Classic Storefront",
+                Code: "classic",
+                Version: "1.0.0",
+                Description: "A clean, typography-first storefront template.",
+                PreviewImageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+                IsActive: true,
+                CreatedAt: DateTime.UtcNow.AddMonths(-2),
+                Sections: new List<ThemeSection>
+                {
+                    new("hero", "Hero Banner", "{}", 0),
+                    new("featured", "Featured Products", "{}", 1),
+                    new("testimonials", "Testimonials", "{}", 2)
+                }),
+            ActivatedAt: DateTime.UtcNow.AddDays(-14),
+            IsActive: true,
+            Variables: new List<ThemeVariable>
+            {
+                new("primaryColor", "#2563EB"),
+                new("accentColor", "#F97316"),
+                new("fontFamily", "Inter, sans-serif"),
+                new("logoUrl", "https://images.unsplash.com/photo-1521572267360-ee0c2909d518")
+            });
     }
 }
