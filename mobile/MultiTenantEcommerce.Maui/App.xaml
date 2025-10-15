@@ -4,55 +4,9 @@
              x:Class="MultiTenantEcommerce.Maui.App">
     <Application.Resources>
         <ResourceDictionary>
-            <Color x:Key="PrimaryColor">#2563EB</Color>
-            <Color x:Key="SecondaryColor">#7C3AED</Color>
-            <Color x:Key="AccentColor">#F97316</Color>
-            <Color x:Key="BackgroundColor">#F5F7FB</Color>
-            <Color x:Key="TextPrimaryColor">#111827</Color>
-            <Color x:Key="TextSecondaryColor">#6B7280</Color>
-
-            <Style TargetType="NavigationPage">
-                <Setter Property="BarBackgroundColor" Value="{StaticResource PrimaryColor}" />
-                <Setter Property="BarTextColor" Value="White" />
-            </Style>
-
-            <Style TargetType="Label">
-                <Setter Property="TextColor" Value="{StaticResource TextPrimaryColor}" />
-                <Setter Property="FontFamily" Value="OpenSansRegular" />
-            </Style>
-
-            <Style x:Key="HeadlineLabelStyle" TargetType="Label">
-                <Setter Property="FontAttributes" Value="Bold" />
-                <Setter Property="FontSize" Value="22" />
-                <Setter Property="TextColor" Value="{StaticResource TextPrimaryColor}" />
-            </Style>
-
-            <Style x:Key="SectionTitleLabelStyle" TargetType="Label" BasedOn="{StaticResource HeadlineLabelStyle}">
-                <Setter Property="FontSize" Value="18" />
-            </Style>
-
-            <Style x:Key="SubtleLabelStyle" TargetType="Label">
-                <Setter Property="TextColor" Value="{StaticResource TextSecondaryColor}" />
-                <Setter Property="FontSize" Value="14" />
-            </Style>
-
-            <Style x:Key="PrimaryButtonStyle" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="{StaticResource PrimaryColor}" />
-                <Setter Property="TextColor" Value="White" />
-                <Setter Property="CornerRadius" Value="12" />
-                <Setter Property="Padding" Value="16,12" />
-                <Setter Property="FontAttributes" Value="Bold" />
-            </Style>
-
-            <Style x:Key="SecondaryButtonStyle" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="White" />
-                <Setter Property="TextColor" Value="{StaticResource PrimaryColor}" />
-                <Setter Property="BorderColor" Value="{StaticResource PrimaryColor}" />
-                <Setter Property="BorderWidth" Value="1" />
-                <Setter Property="CornerRadius" Value="12" />
-                <Setter Property="Padding" Value="16,12" />
-                <Setter Property="FontAttributes" Value="Bold" />
-            </Style>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/StoreThemeResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

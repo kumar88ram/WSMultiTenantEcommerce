@@ -27,6 +27,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<StoreSetting> StoreSettings => Set<StoreSetting>();
     public DbSet<Theme> Themes => Set<Theme>();
+    public DbSet<ThemeSection> ThemeSections => Set<ThemeSection>();
+    public DbSet<TenantTheme> TenantThemes => Set<TenantTheme>();
+    public DbSet<ThemeVariable> ThemeVariables => Set<ThemeVariable>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductCategory> ProductCategories => Set<ProductCategory>();
@@ -89,7 +92,6 @@ public class ApplicationDbContext : DbContext
             modelBuilder.Entity<OneTimePassword>().HasQueryFilter(otp => otp.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<PasswordResetToken>().HasQueryFilter(prt => prt.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<StoreSetting>().HasQueryFilter(s => s.TenantId == _tenantResolver.CurrentTenantId);
-            modelBuilder.Entity<Theme>().HasQueryFilter(t => t.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<Category>().HasQueryFilter(c => c.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<Product>().HasQueryFilter(p => p.TenantId == _tenantResolver.CurrentTenantId);
             modelBuilder.Entity<ProductAttribute>().HasQueryFilter(pa => pa.TenantId == _tenantResolver.CurrentTenantId);

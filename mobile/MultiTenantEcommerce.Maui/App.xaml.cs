@@ -1,19 +1,34 @@
+using System.Collections.Specialized;
+using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using MultiTenantEcommerce.Maui.Services;
 using MultiTenantEcommerce.Maui.Views;
-using System.Collections.Specialized;
 
 namespace MultiTenantEcommerce.Maui;
 
 public partial class App : Application
 {
     private readonly NotificationService _notificationService;
+    private readonly ThemeService _themeService;
 
-    public App(SplashPage splashPage, NotificationService notificationService)
+    public App(SplashPage splashPage, NotificationService notificationService, ThemeService themeService)
     {
         InitializeComponent();
         _notificationService = notificationService;
+        _themeService = themeService;
         MainPage = new NavigationPage(splashPage);
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _themeService.RefreshAsync();
+            }
+            catch
+            {
+                // Theme loading is non-critical during startup; failures will be retried by view models.
+            }
+        });
     }
 
     protected override void OnStart()

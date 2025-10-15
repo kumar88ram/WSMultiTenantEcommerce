@@ -39,6 +39,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<AuthService>();
         builder.Services.AddSingleton<CartService>();
         builder.Services.AddSingleton<NotificationService>();
+        builder.Services.AddSingleton<ThemeService>();
 
         builder.Services.AddSingleton<AppShell>();
 
@@ -86,6 +87,7 @@ public static class MauiProgram
 
         builder.Services.AddTransient<SupportTicketsViewModel>();
         builder.Services.AddTransient<SupportTicketsPage>();
+        builder.Services.AddTransient<ThemeViewModel>();
 
         return builder.Build();
     }

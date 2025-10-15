@@ -38,6 +38,11 @@ export const ADMIN_ROUTES: Routes = [
         path: 'plugins',
         loadComponent: () =>
           import('./pages/plugins/plugins.component').then(m => m.PluginsComponent)
+      },
+      {
+        path: 'themes',
+        loadComponent: () =>
+          import('./pages/theme-management/theme-list.component').then(m => m.ThemeListComponent)
       }
     ]
   }
